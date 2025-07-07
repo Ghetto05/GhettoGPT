@@ -18,7 +18,10 @@ logger = logging.getLogger(__name__)
 async def on_ready():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     logger.log(msg=f"🤖 Logged in as {bot.user}", level=logging.INFO)
-    setup_commands(bot)
+    if not hasattr(bot, "commands_registered"):
+        setup_commands(bot)
+        await bot.tree.sync()
+        bot.commands_registered = True
 
 @bot.event
 async def on_message(message):
