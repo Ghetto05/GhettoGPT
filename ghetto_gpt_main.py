@@ -21,6 +21,7 @@ async def on_ready():
     if not hasattr(bot, "commands_registered"):
         setup_commands(bot)
         await bot.tree.sync()
+        await bot.tree.sync(guild=discord.Object(id=954740284758032425))
         bot.commands_registered = True
 
 @bot.event
