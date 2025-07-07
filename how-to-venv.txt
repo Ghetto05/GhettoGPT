@@ -1,0 +1,7 @@
+Restore .venv with
+
+pip install -r requirements.txt
+
+Update requirements with:
+
+pip freeze > requirements.txt
