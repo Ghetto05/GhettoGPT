@@ -31,8 +31,6 @@ jobs:
         echo "Version tag: $VERSION_TAG"
         
         docker build \
-          --build-arg DISCORD_TOKEN_ARG="REPLACE_IN_STACK" \
-          --build-arg GITHUB_TOKEN_ARG="REPLACE_IN_STACK" \
           -t $IMAGE_NAME:$VERSION_TAG -t $IMAGE_NAME:latest .
 
     - name: Push to GitHub Container Registry
