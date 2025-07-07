@@ -14,6 +14,10 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -29,7 +33,6 @@ jobs:
       run: |
         VERSION_TAG=build-${{ github.run_number }}
         echo "Version tag: $VERSION_TAG"
-        echo "${{ secrets.GITHUB_TOKEN }}"
 
         docker build \
           -t $IMAGE_NAME:$VERSION_TAG -t $IMAGE_NAME:latest .
