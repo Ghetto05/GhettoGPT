@@ -11,14 +11,15 @@ intents.messages = True
 intents.message_content = True
 intents.guilds = True
 
-bot = commands.Bot(command_prefix="/", intents=intents)
+bot = commands.Bot()
 logger = logging.getLogger(__name__)
 
 @bot.event
 async def on_ready():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    logger.log(msg=f"🤖 Logged in as {bot.user}", level=logging.INFO)
+    logger.log(msg=f"Logged in as {bot.user}", level=logging.INFO)
     if not hasattr(bot, "commands_registered"):
+        logger.log(msg=f"Registering commands", level=logging.INFO)
         setup_commands(bot)
         bot.commands_registered = True
 
@@ -34,6 +35,6 @@ async def on_message(message):
 
 if __name__ == "__main__":
     if not DISCORD_TOKEN:
-        logger.log(msg="❌ DISCORD_TOKEN is missing.", level=logging.ERROR)
+        logger.log(msg="DISCORD_TOKEN is missing.", level=logging.ERROR)
         exit(1)
     bot.run(DISCORD_TOKEN)

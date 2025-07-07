@@ -8,6 +8,6 @@ def setup_commands(bot):
         guild_ids=[ 954740284758032425 ]
     )
     async def update_command(ctx):
-        await ctx.send("🔄 Updating changelogs...")
+        await ctx.send("Updating changelogs...")
         await run_changelog_update(bot)
-        await ctx.send("✅ Done.")
+        await ctx.send("Done.")
