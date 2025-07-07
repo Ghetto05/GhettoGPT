@@ -1,8 +1,8 @@
 import aiohttp
+from aiohttp import web
 import base64
 import re
 import os
-from discord.ext import commands
 
 REPO = "Ghetto05/GhettosModding"
 BRANCH = "main"
@@ -10,19 +10,6 @@ BASE_URL = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}"
 API_URL = f"https://api.github.com/repos/{REPO}"
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-
-def setup_changelog_update(bot: commands.Bot):
-    @bot.event
-    async def on_ready():
-        print(f"🤖 Logged in as {bot.user}")
-        bot.loop.create_task(start_webhook_server(bot))
-        await run_changelog_update(bot)
-
-    @bot.command(name="update")
-    async def update_command(ctx):
-        await ctx.send("🔄 Updating changelogs...")
-        await run_changelog_update(bot)
-        await ctx.send("✅ Done.")
 
 async def run_changelog_update(bot):
     async with aiohttp.ClientSession() as session:
@@ -33,9 +20,6 @@ async def run_changelog_update(bot):
             versions = await get_all_changelog_versions(session, mod)
             for version in versions:
                 await process_changelog(session, bot, mod, version, int(channel_id), filenames.get(mod))
-
-# Webhook listener
-from aiohttp import web
 
 async def start_webhook_server(bot):
     async def handle_webhook(request):
