@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 @bot.event
 async def on_ready():
-    logger.log(msg=f"🤖 Logged in as {bot.user}")
+    logger.log(msg=f"🤖 Logged in as {bot.user}", level=logging.INFO)
     await setup_commands(bot)
 
 @bot.event

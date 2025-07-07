@@ -27,7 +27,7 @@ async def run_changelog_update(bot):
 
 async def start_webhook_server(bot):
     async def handle_webhook(request):
-        logger.log("🌐 Webhook received")
+        logger.log(msg="🌐 Webhook received", level=logging.INFO)
         await run_changelog_update(bot)
         return web.Response(text="✅ Changelog update triggered")
 
@@ -123,17 +123,17 @@ async def process_changelog(session, client, mod, version, channel_id, display_n
 
     channel = client.get_channel(channel_id)
     if not channel:
-        logger.log(msg=f"⚠️ Channel {channel_id} not found.")
+        logger.log(msg=f"⚠️ Channel {channel_id} not found.", level=logging.INFO)
         return
 
     try:
         if msg_id:
             msg = await channel.fetch_message(msg_id)
             await msg.edit(content=content)
-            logger.log(msg=f"✅ Updated: {mod_slug}")
+            logger.log(msg=f"✅ Updated: {mod_slug}", level=logging.INFO)
         else:
             msg = await channel.send(content)
             await write_message_id_file(session, mod_slug, msg.id)
-            logger.log(msg=f"🆕 Posted: {mod_slug}")
+            logger.log(msg=f"🆕 Posted: {mod_slug}", level=logging.INFO)
     except Exception as e:
         logger.log(msg=f"❌ Error handling {mod_slug}: {e}", level=logging.ERROR)
