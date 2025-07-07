@@ -123,17 +123,17 @@ async def process_changelog(session, client, mod, version, channel_id, display_n
 
     channel = client.get_channel(channel_id)
     if not channel:
-        logger.log(f"⚠️ Channel {channel_id} not found.")
+        logger.log(msg=f"⚠️ Channel {channel_id} not found.")
         return
 
     try:
         if msg_id:
             msg = await channel.fetch_message(msg_id)
             await msg.edit(content=content)
-            logger.log(f"✅ Updated: {mod_slug}")
+            logger.log(msg=f"✅ Updated: {mod_slug}")
         else:
             msg = await channel.send(content)
             await write_message_id_file(session, mod_slug, msg.id)
-            logger.log(f"🆕 Posted: {mod_slug}")
+            logger.log(msg=f"🆕 Posted: {mod_slug}")
     except Exception as e:
         logger.log(msg=f"❌ Error handling {mod_slug}: {e}", level=logging.ERROR)
