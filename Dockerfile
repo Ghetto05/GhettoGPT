@@ -5,4 +5,4 @@ COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "ghetto_gpt_main.py"]
+CMD ["python", "main.py"]

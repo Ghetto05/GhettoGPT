@@ -135,4 +135,4 @@ async def process_changelog(session, client, mod, version, channel_id, display_n
             await write_message_id_file(session, mod_slug, msg.id)
             logger.log(msg=f"Posted: {mod_slug}", level=logging.INFO)
     except Exception as e:
-        logger.log(msg=f"❌ Error handling {mod_slug}: {e}", level=logging.ERROR)
+        logger.log(msg=f"Error handling {mod_slug}: {e}", level=logging.ERROR)

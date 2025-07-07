@@ -1,3 +1,5 @@
+import discord
+
 from mod_changelog_update import start_webhook_server, run_changelog_update
 
 def setup_commands(bot):
@@ -7,7 +9,7 @@ def setup_commands(bot):
         name="update",
         guild_ids=[ 954740284758032425 ]
     )
-    async def update_command(ctx):
+    async def update_command(ctx: discord.ApplicationContext):
         await ctx.send("Updating changelogs...")
         await run_changelog_update(bot)
         await ctx.send("Done.")
