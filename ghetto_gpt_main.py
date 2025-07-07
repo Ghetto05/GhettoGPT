@@ -12,25 +12,23 @@ intents.guilds = True
 
 bot = commands.Bot(command_prefix="/", intents=intents)
 
-def setup():
-    @bot.event
-    async def on_ready():
-        print(f"🤖 Logged in as {bot.user}")
-        await setup_commands(bot)
+@bot.event
+async def on_ready():
+    print(f"🤖 Logged in as {bot.user}")
+    await setup_commands(bot)
 
-    @bot.event
-    async def on_message(message):
-        if message.author == bot.user:
-            return
+@bot.event
+async def on_message(message):
+    if message.author == bot.user:
+        return
 
-        if bot.user in message.mentions:
-            await message.channel.send(f"Hi {message.author.name}!")
+    if bot.user in message.mentions:
+        await message.channel.send(f"Hi {message.author.name}!")
 
-        await bot.process_commands(message)
+    await bot.process_commands(message)
 
 if __name__ == "__main__":
     if not DISCORD_TOKEN:
         print("❌ DISCORD_TOKEN is missing.")
         exit(1)
-    setup()
     bot.run(DISCORD_TOKEN)
