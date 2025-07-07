@@ -1,3 +1,4 @@
+import logging
 import os
 import discord
 from discord.ext import commands
@@ -11,10 +12,11 @@ intents.message_content = True
 intents.guilds = True
 
 bot = commands.Bot(command_prefix="/", intents=intents)
+logger = logging.getLogger(__name__)
 
 @bot.event
 async def on_ready():
-    print(f"🤖 Logged in as {bot.user}")
+    logger.log(f"🤖 Logged in as {bot.user}")
     await setup_commands(bot)
 
 @bot.event
@@ -29,6 +31,6 @@ async def on_message(message):
 
 if __name__ == "__main__":
     if not DISCORD_TOKEN:
-        print("❌ DISCORD_TOKEN is missing.")
+        logger.log(msg="❌ DISCORD_TOKEN is missing.", level=logging.ERROR)
         exit(1)
     bot.run(DISCORD_TOKEN)

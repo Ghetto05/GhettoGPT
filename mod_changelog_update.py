@@ -1,3 +1,5 @@
+import logging
+
 import aiohttp
 from aiohttp import web
 import base64
@@ -11,6 +13,8 @@ API_URL = f"https://api.github.com/repos/{REPO}"
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
+logger = logging.getLogger(__name__)
+
 async def run_changelog_update(bot):
     async with aiohttp.ClientSession() as session:
         channels = await get_mappings(session, "_Publish/ChangelogChannels.md")
@@ -23,7 +27,7 @@ async def run_changelog_update(bot):
 
 async def start_webhook_server(bot):
     async def handle_webhook(request):
-        print("🌐 Webhook received")
+        logger.log("🌐 Webhook received")
         await run_changelog_update(bot)
         return web.Response(text="✅ Changelog update triggered")
 
@@ -119,17 +123,17 @@ async def process_changelog(session, client, mod, version, channel_id, display_n
 
     channel = client.get_channel(channel_id)
     if not channel:
-        print(f"⚠️ Channel {channel_id} not found.")
+        logger.log(f"⚠️ Channel {channel_id} not found.")
         return
 
     try:
         if msg_id:
             msg = await channel.fetch_message(msg_id)
             await msg.edit(content=content)
-            print(f"✅ Updated: {mod_slug}")
+            logger.log(f"✅ Updated: {mod_slug}")
         else:
             msg = await channel.send(content)
             await write_message_id_file(session, mod_slug, msg.id)
-            print(f"🆕 Posted: {mod_slug}")
+            logger.log(f"🆕 Posted: {mod_slug}")
     except Exception as e:
-        print(f"❌ Error handling {mod_slug}: {e}")
+        logger.log(msg=f"❌ Error handling {mod_slug}: {e}", level=logging.ERROR)
