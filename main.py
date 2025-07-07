@@ -3,16 +3,18 @@ import os
 import discord
 from discord.ext import commands
 from commands import setup_commands
+import mod_changelog_update
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-intents = discord.Intents.default()
-intents.messages = True
+intents = discord.Intents.all()
+intents.members = True
 intents.message_content = True
-intents.guilds = True
+intents.presences = True
 
 bot = commands.Bot()
 logger = logging.getLogger(__name__)
+
 
 @bot.event
 async def on_ready():
@@ -23,15 +25,21 @@ async def on_ready():
         setup_commands(bot)
         bot.commands_registered = True
 
+
 @bot.event
-async def on_message(message):
+async def on_message(message: discord.Message):
+    logger.log(msg=f"Message received: {message.content}", level=logging.INFO)
     if message.author == bot.user:
         return
 
     if bot.user in message.mentions:
         await message.channel.send(f"Hi {message.author.name}!")
 
+    if message.content == "/updatechangelog":
+        await mod_changelog_update.process_all_changelogs()
+
     await bot.process_commands(message)
+
 
 if __name__ == "__main__":
     if not DISCORD_TOKEN:
