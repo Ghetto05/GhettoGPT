@@ -6,9 +6,9 @@ import base64
 import re
 import os
 
-REPO = "Ghetto05/GhettosModding"
+REPO = "Ghetto05/Mods"
 BRANCH = "main"
-BASE_URL = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}"
+BASE_URL = f"https://raw.githubusercontent.com/{REPO}/refs/heads/{BRANCH}"
 API_URL = f"https://api.github.com/repos/{REPO}"
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -23,6 +23,7 @@ async def run_changelog_update(bot: discord.ext.commands.Bot):
 
         for mod, channel_id in channels.items():
             versions = await get_all_changelog_versions(session, mod)
+            logger.log(logging.INFO, f"Found {len(versions)} versions for {mod}")
             for version in versions:
                 await process_changelog(session, bot, mod, version, int(channel_id), filenames.get(mod))
 
@@ -125,26 +126,32 @@ async def process_changelog(session, client, mod, version, channel_id, display_n
         return
 
     tag_exists = await check_tag_exists(session, mod_slug)
-    header = f"# {display_name or mod} {version}" + ("" if tag_exists else " (WIP)")
-    content = f"{header}\n\n{changelog}"
+    title = f"Release {version}" + ("" if tag_exists else " (WIP)")
+
+    if len(changelog) > 4096:
+        logger.log(msg=f"Changelog too long ({len(changelog)} chars) — must be ≤ 4096 for embed.", level=logging.ERROR)
+        return
+
+    embed = discord.Embed(title=title, description=changelog, color=0xFF4F00)
+
+    channel = client.get_channel(channel_id)
+    if not channel:
+        logger.log(msg=f"Channel {channel_id} not found.", level=logging.ERROR)
+        return
 
     msg_id_file = f"_Publish/Changelogs/{mod_slug}_MessageID.txt"
     msg_id_raw = await fetch_raw_file(session, msg_id_file)
     msg_id = int(msg_id_raw.strip()) if msg_id_raw and msg_id_raw.strip().isdigit() else None
 
-    channel = client.get_channel(channel_id)
-    if not channel:
-        logger.log(msg=f"⚠Channel {channel_id} not found.", level=logging.INFO)
-        return
-
     try:
         if msg_id:
-            msg = await channel.fetch_message(msg_id)
-            await msg.edit(content=content)
-            logger.log(msg=f"Updated: {mod_slug}", level=logging.INFO)
+            original_msg = await channel.fetch_message(msg_id)
+            await original_msg.edit(content=None, embed=embed)
         else:
-            msg = await channel.send(content)
+            msg = await channel.send(embed=embed)
             await write_message_id_file(session, mod_slug, msg.id)
-            logger.log(msg=f"Posted: {mod_slug}", level=logging.INFO)
+
+        logger.log(msg=f"Updated embed for {mod_slug} ({len(changelog)} chars)", level=logging.INFO)
+
     except Exception as e:
-        logger.log(msg=f"Error handling {mod_slug}: {e}", level=logging.ERROR)
+        logger.log(msg=f"Error posting embed for {mod_slug}: {e}", level=logging.ERROR)

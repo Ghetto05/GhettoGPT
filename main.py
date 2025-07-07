@@ -2,7 +2,6 @@ import logging
 import os
 import discord
 from discord.ext import commands
-from commands import setup_commands
 import mod_changelog_update
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -15,6 +14,11 @@ intents.presences = True
 bot = commands.Bot()
 logger = logging.getLogger(__name__)
 
+extensions = ("cogs.Commands",)
+
+for extension in extensions:
+    bot.load_extension(extension)
+
 
 @bot.event
 async def on_ready():
@@ -22,21 +26,17 @@ async def on_ready():
     logger.log(msg=f"Logged in as {bot.user}", level=logging.INFO)
     if not hasattr(bot, "commands_registered"):
         logger.log(msg=f"Registering commands", level=logging.INFO)
-        setup_commands(bot)
         bot.commands_registered = True
 
 
 @bot.event
 async def on_message(message: discord.Message):
     logger.log(msg=f"Message received: {message.content}", level=logging.INFO)
-    if message.author == bot.user:
+    if message.author.bot:
         return
 
     if bot.user in message.mentions:
         await message.channel.send(f"Hi {message.author.name}!")
-
-    if message.content == "/updatechangelog":
-        await mod_changelog_update.process_all_changelogs()
 
     await bot.process_commands(message)
 
