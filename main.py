@@ -24,9 +24,6 @@ for extension in extensions:
 async def on_ready():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     logger.log(msg=f"Logged in as {bot.user}", level=logging.INFO)
-    if not hasattr(bot, "commands_registered"):
-        logger.log(msg=f"Registering commands", level=logging.INFO)
-        bot.commands_registered = True
 
 
 @bot.event

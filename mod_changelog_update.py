@@ -1,10 +1,13 @@
 import logging
 import aiohttp
 import discord
+import discord.ext
 from aiohttp import web
 import base64
 import re
 import os
+
+import WellKnownChannels
 
 REPO = "Ghetto05/Mods"
 BRANCH = "main"
@@ -31,6 +34,7 @@ async def run_changelog_update(bot: discord.ext.commands.Bot):
 async def start_webhook_server(bot: discord.ext.commands.Bot):
     async def handle_webhook(request):
         logger.log(msg="Webhook received", level=logging.INFO)
+        await bot.get_channel(WellKnownChannels.BotSetup).send("Updating changelogs triggered by webhook")
         await run_changelog_update(bot)
         return web.Response(text="Changelog update triggered")
 

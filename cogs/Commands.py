@@ -1,10 +1,13 @@
+import logging
+
 import discord.ext
 from discord import Bot, slash_command
 from mod_changelog_update import run_changelog_update, start_webhook_server
 
+logger = logging.getLogger(__name__)
+
 
 class Commands(discord.Cog):
-
     def __init__(self, bot: Bot):
         self.bot = bot
 
@@ -16,5 +19,7 @@ class Commands(discord.Cog):
         await run_changelog_update(self.bot)
         await ctx.respond("Done.")
 
+
 def setup(bot: Bot):
+    logger.log(msg=f"Registering commands", level=logging.INFO)
     bot.add_cog(Commands(bot))
