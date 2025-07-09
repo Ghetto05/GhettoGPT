@@ -1,4 +1,5 @@
 import threading
+from typing import Optional
 
 from flask import Flask, request
 import asyncio
@@ -19,17 +20,19 @@ API_URL = f"https://api.github.com/repos/{REPO}"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
-webhook_output_channel = None
+webhook_output_channel: Optional[discord.channel] = None
 flask_started = False
+webhook_bot: Optional[discord.ext.commands.Bot] = None
 
 async def setup_webhook(bot: discord.ext.commands.Bot):
-    global flask_started, webhook_output_channel
+    global flask_started, webhook_output_channel, webhook_bot
+
+    webhook_output_channel = bot.get_channel(WellKnownChannels.BotSetup)
+    webhook_bot = bot
 
     if not flask_started:
         threading.Thread(target=run_flask, daemon=True).start()
         flask_started = True
-
-    webhook_output_channel = bot.get_channel(WellKnownChannels.BotSetup)
 
 
 def run_flask():
@@ -37,11 +40,11 @@ def run_flask():
 
 
 @app.route('/webhooks/discord-bot/changelog-update', methods=['POST'])
-def changelog_webhook(bot: discord.ext.commands.Bot):
+def changelog_webhook():
     if webhook_output_channel:
         asyncio.run_coroutine_threadsafe(
             webhook_output_channel.send(f"Changelog update triggered by webhook"),
-            bot.loop
+            webhook_bot.loop
         )
     return '', 204
 
