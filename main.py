@@ -24,6 +24,7 @@ for extension in extensions:
 async def on_ready():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     logger.log(msg=f"Logged in as {bot.user}", level=logging.INFO)
+    await mod_changelog_update.setup_webhook(bot)
 
 
 @bot.event

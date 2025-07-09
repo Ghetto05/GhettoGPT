@@ -1,8 +1,11 @@
+import threading
+
+from flask import Flask, request
+import asyncio
 import logging
 import aiohttp
 import discord
 import discord.ext
-from aiohttp import web
 import base64
 import re
 import os
@@ -13,37 +16,45 @@ REPO = "Ghetto05/Mods"
 BRANCH = "main"
 BASE_URL = f"https://raw.githubusercontent.com/{REPO}/refs/heads/{BRANCH}"
 API_URL = f"https://api.github.com/repos/{REPO}"
-
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-
 logger = logging.getLogger(__name__)
+app = Flask(__name__)
+webhook_output_channel = None
+flask_started = False
+
+async def setup_webhook(bot: discord.ext.commands.Bot):
+    global flask_started, webhook_output_channel
+
+    if not flask_started:
+        threading.Thread(target=run_flask, daemon=True).start()
+        flask_started = True
+
+    webhook_output_channel = bot.get_channel(WellKnownChannels.BotSetup)
+
+
+def run_flask():
+    app.run(host="0.0.0.0", port=5000)
+
+
+@app.route('/webhooks/discord-bot/changelog-update', methods=['POST'])
+def changelog_webhook(bot: discord.ext.commands.Bot):
+    if webhook_output_channel:
+        asyncio.run_coroutine_threadsafe(
+            webhook_output_channel.send(f"Changelog update triggered by webhook"),
+            bot.loop
+        )
+    return '', 204
 
 
 async def run_changelog_update(bot: discord.ext.commands.Bot):
     async with aiohttp.ClientSession() as session:
         channels = await get_mappings(session, "_Publish/ChangelogChannels.md")
-        filenames = await get_mappings(session, "_Publish/FileNames.md")
 
         for mod, channel_id in channels.items():
             versions = await get_all_changelog_versions(session, mod)
-            logger.log(logging.INFO, f"Found {len(versions)} versions for {mod}")
             for version in versions:
-                await process_changelog(session, bot, mod, version, int(channel_id), filenames.get(mod))
-
-
-async def start_webhook_server(bot: discord.ext.commands.Bot):
-    async def handle_webhook(request):
-        logger.log(msg="Webhook received", level=logging.INFO)
-        await bot.get_channel(WellKnownChannels.BotSetup).send("Updating changelogs triggered by webhook")
-        await run_changelog_update(bot)
-        return web.Response(text="Changelog update triggered")
-
-    app = web.Application()
-    app.router.add_post("/webhooks/ghettogpt/update_changelog", handle_webhook)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", 8080)
-    await site.start()
+                await process_changelog(session, bot, mod, version, int(channel_id))
+                await asyncio.sleep(1)
 
 
 async def fetch_raw_file(session, path):
@@ -112,18 +123,7 @@ async def get_all_changelog_versions(session, mod):
         ]
 
 
-async def process_all_changelogs(client):
-    async with aiohttp.ClientSession() as session:
-        channels = await get_mappings(session, "_Publish/ChangelogChannels.md")
-        filenames = await get_mappings(session, "_Publish/FileNames.md")
-
-        for mod, channel_id in channels.items():
-            versions = await get_all_changelog_versions(session, mod)
-            for version in versions:
-                await process_changelog(session, client, mod, version, int(channel_id), filenames.get(mod))
-
-
-async def process_changelog(session, client, mod, version, channel_id, display_name):
+async def process_changelog(session, bot: discord.ext.commands.Bot, mod, version, channel_id):
     mod_slug = f"{mod}_{version}"
     changelog = await fetch_raw_file(session, f"_Publish/Changelogs/{mod_slug}.md")
     if not changelog:
@@ -138,7 +138,7 @@ async def process_changelog(session, client, mod, version, channel_id, display_n
 
     embed = discord.Embed(title=title, description=changelog, color=0xFF4F00)
 
-    channel = client.get_channel(channel_id)
+    channel = bot.get_channel(channel_id)
     if not channel:
         logger.log(msg=f"Channel {channel_id} not found.", level=logging.ERROR)
         return
