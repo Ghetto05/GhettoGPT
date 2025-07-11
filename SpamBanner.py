@@ -21,6 +21,8 @@ async def check_and_ban_link_spammer(message: discord.Message, bot: discord.Bot)
     if not LINK_REGEX.search(message.content):
         return
 
+    logger.log(msg=f"Found message with link", level=INFO)
+
     now = datetime.now(UTC)
     user_id = message.author.id
     msg_data = (now, message.content, message)
@@ -37,6 +39,8 @@ async def check_and_ban_link_spammer(message: discord.Message, bot: discord.Bot)
         msg for ts, content, msg in link_message_cache[user_id]
         if content == message.content
     ]
+
+    logger.log(msg=f"Matches: {len(matches)}", level=INFO)
 
     if len(matches) >= spam_threshold:
         for msg in matches:
