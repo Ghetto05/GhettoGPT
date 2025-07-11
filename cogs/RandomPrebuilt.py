@@ -52,11 +52,11 @@ class RandomPrebuilt(discord.Cog):
                 json_data = await json_resp.read()
 
         # Step 4: Send embed + attachment
-        embed = discord.Embed(title=title, description=f"Mod: `{folder}`", color=0xFF4F00)
+        embed = discord.Embed(title=title, description=f"To install, drop int 'Mods/!GhettosFirearmSDKv2Saves/'", color=0xFF4F00)
         embed.set_image(url=img_url)
 
         file = discord.File(BytesIO(json_data), filename=f"{folder}.json")
-        await ctx.send(embed=embed, file=file)
+        await ctx.respond(embed=embed, file=file)
 
 
 def setup(bot: Bot):
