@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 
 import FakeIPGetter
+import WellKnownChannels
 import mod_changelog_update
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -20,6 +21,8 @@ extensions = ("cogs.Commands",)
 
 for extension in extensions:
     bot.load_extension(extension)
+
+bot.get_channel(WellKnownChannels.BotSetup).send("Starting up...")
 
 
 @bot.event
