@@ -3,6 +3,8 @@ import re
 import discord
 from datetime import datetime, UTC
 
+import WellKnown
+
 LINK_REGEX = re.compile(r'https?://\S+')
 
 link_message_cache = {}
@@ -12,7 +14,7 @@ spam_threshold = 4
 
 logger = getLogger(__name__)
 
-async def check_and_ban_link_spammer(message: discord.Message):
+async def check_and_ban_link_spammer(message: discord.Message, bot: discord.Bot):
     if message.author.bot or not message.guild:
         return
 
@@ -44,6 +46,9 @@ async def check_and_ban_link_spammer(message: discord.Message):
                 pass
         try:
             await message.guild.ban(message.author, reason="Link spam in multiple channels")
+            moderation_channel = bot.get_channel(WellKnown.channel_moderators)
+            moderator_mention = moderation_channel.guild.get_role(WellKnown.role_moderator).mention
+            await moderation_channel.send(f"{moderator_mention} Banned {message.author.mention} for spamming links")
         except discord.Forbidden:
             logger.log(msg=f"Couldn't ban {message.author} — missing permissions", level=INFO)
         link_message_cache.pop(user_id, None)

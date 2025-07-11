@@ -2,7 +2,7 @@ import logging
 import os
 import discord
 from discord.ext import commands
-import WellKnownChannels
+import WellKnown
 from ChangelogUpdate import setup_changelog_update_webhook
 from SpamBanner import check_and_ban_link_spammer
 
@@ -33,7 +33,7 @@ async def on_ready():
     global initialized
     if not initialized:
         initialized = True
-        await bot.get_channel(WellKnownChannels.BotSetup).send("Starting up...")
+        await bot.get_channel(WellKnown.channel_bot_setup).send(f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up...")
 
     await setup_changelog_update_webhook(bot)
 
@@ -44,7 +44,7 @@ async def on_message(message: discord.Message):
     if message.author.bot:
         return
 
-    await check_and_ban_link_spammer(message)
+    await check_and_ban_link_spammer(message, bot)
 
     if bot.user in message.mentions:
         await message.channel.send(f"Hi {message.author.display_name}!")

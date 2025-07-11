@@ -11,7 +11,7 @@ import base64
 import re
 import os
 
-import WellKnownChannels
+import WellKnown
 
 REPO = "Ghetto05/Mods"
 BRANCH = "main"
@@ -28,7 +28,7 @@ webhook_bot: Optional[discord.Bot] = None
 async def setup_changelog_update_webhook(bot: discord.Bot):
     global flask_started, webhook_output_channel, webhook_bot
 
-    webhook_output_channel = bot.get_channel(WellKnownChannels.BotSetup)
+    webhook_output_channel = bot.get_channel(WellKnown.channel_bot_setup)
     webhook_bot = bot
 
     if not flask_started:
