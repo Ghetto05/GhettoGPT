@@ -3,8 +3,6 @@ import hashlib
 
 def generate_public_ipv4(number_int):
     number_str = str(number_int)
-    if not number_str.isdigit() or len(number_str) != 18:
-        raise ValueError("Input must be a string of exactly 18 digits.")
 
     # Hash the input to create a consistent base, avoiding sensitive IPs
     hash_bytes = hashlib.sha256(number_str.encode()).digest()
