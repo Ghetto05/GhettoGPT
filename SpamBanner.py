@@ -43,11 +43,6 @@ async def check_and_ban_link_spammer(message: discord.Message, bot: discord.Bot)
     logger.log(msg=f"Matches: {len(matches)}", level=INFO)
 
     if len(matches) >= spam_threshold:
-        for msg in matches:
-            try:
-                await msg.delete()
-            except discord.Forbidden:
-                pass
         try:
             await message.guild.ban(message.author, reason="Link spam in multiple channels")
             moderation_channel = bot.get_channel(WellKnown.channel_moderators)
@@ -55,4 +50,9 @@ async def check_and_ban_link_spammer(message: discord.Message, bot: discord.Bot)
             await moderation_channel.send(f"{moderator_mention} Banned {message.author.mention} for spamming links")
         except discord.Forbidden:
             logger.log(msg=f"Couldn't ban {message.author} — missing permissions", level=INFO)
+        for msg in matches:
+            try:
+                await msg.delete()
+            except discord.Forbidden:
+                pass
         link_message_cache.pop(user_id, None)
