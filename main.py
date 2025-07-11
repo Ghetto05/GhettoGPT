@@ -13,7 +13,7 @@ intents.members = True
 intents.message_content = True
 intents.presences = True
 
-bot = commands.Bot()
+bot = commands.Bot(intents=intents)
 logger = logging.getLogger(__name__)
 
 extensions = ("cogs.Commands",)
