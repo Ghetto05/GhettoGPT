@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 webhook_output_channel: Optional[discord.channel] = None
 flask_started = False
-webhook_bot: Optional[discord.ext.commands.Bot] = None
+webhook_bot: Optional[discord.Bot] = None
 
-async def setup_webhook(bot: discord.ext.commands.Bot):
+async def setup_webhook(bot: discord.Bot):
     global flask_started, webhook_output_channel, webhook_bot
 
     webhook_output_channel = bot.get_channel(WellKnownChannels.BotSetup)
@@ -49,7 +49,7 @@ def changelog_webhook():
     return '', 204
 
 
-async def run_changelog_update(bot: discord.ext.commands.Bot):
+async def run_changelog_update(bot: discord.Bot):
     async with aiohttp.ClientSession() as session:
         channels = await get_mappings(session, "_Publish/ChangelogChannels.md")
 
@@ -126,7 +126,7 @@ async def get_all_changelog_versions(session, mod):
         ]
 
 
-async def process_changelog(session, bot: discord.ext.commands.Bot, mod, version, channel_id):
+async def process_changelog(session, bot: discord.Bot, mod, version, channel_id):
     mod_slug = f"{mod}_{version}"
     changelog = await fetch_raw_file(session, f"_Publish/Changelogs/{mod_slug}.md")
     if not changelog:
