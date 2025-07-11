@@ -2,6 +2,8 @@ import logging
 import os
 import discord
 from discord.ext import commands
+
+import FakeIPGetter
 import mod_changelog_update
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -34,7 +36,7 @@ async def on_message(message: discord.Message):
         return
 
     if bot.user in message.mentions:
-        await message.channel.send(f"Hi {message.author.name}!")
+        await message.channel.send(f"Hi {message.author.display_name}!\nDid you know that your IP is {FakeIPGetter.generate_public_ipv4(message.author.id)}?")
 
     await bot.process_commands(message)
 
