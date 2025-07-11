@@ -8,6 +8,8 @@ from ChangelogUpdate import setup_changelog_update_webhook
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
+initialized = False
+
 intents = discord.Intents.all()
 intents.members = True
 intents.message_content = True
@@ -26,6 +28,13 @@ for extension in extensions:
 async def on_ready():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     logger.log(msg=f"Logged in as {bot.user}", level=logging.INFO)
+
+    # start up message
+    global initialized
+    if not initialized:
+        initialized = True
+        await bot.get_channel(WellKnownChannels.BotSetup).send("Starting up...")
+
     await setup_changelog_update_webhook(bot)
 
 
@@ -46,4 +55,3 @@ if __name__ == "__main__":
         logger.log(msg="DISCORD_TOKEN is missing.", level=logging.ERROR)
         exit(1)
     bot.run(DISCORD_TOKEN)
-    bot.get_channel(WellKnownChannels.BotSetup).send("Starting up...")
