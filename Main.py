@@ -18,7 +18,7 @@ intents.presences = True
 bot = commands.Bot(intents=intents)
 logger = logging.getLogger(__name__)
 
-extensions = ("cogs.Commands",)
+extensions = ("cogs.Commands", "cogs.RandomPrebuilt",)
 
 for extension in extensions:
     bot.load_extension(extension)

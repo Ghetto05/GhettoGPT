@@ -15,7 +15,7 @@ class Commands(discord.Cog):
         self.bot = bot
 
     @slash_command(name="update", description="Update the changelogs", guild_ids=[954740284758032425])
-    async def setup_commands(self, ctx: discord.ApplicationContext):
+    async def update_changelogs(self, ctx: discord.ApplicationContext):
         await ctx.respond("Updating changelogs...")
         await run_changelog_update(self.bot)
         await ctx.respond("Done.")
