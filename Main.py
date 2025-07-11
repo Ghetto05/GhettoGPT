@@ -2,9 +2,9 @@ import logging
 import os
 import discord
 from discord.ext import commands
-
 import WellKnownChannels
 from ChangelogUpdate import setup_changelog_update_webhook
+from SpamBanner import check_and_ban_link_spammer
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
@@ -43,6 +43,8 @@ async def on_message(message: discord.Message):
     logger.log(msg=f"Message received: {message.content}", level=logging.INFO)
     if message.author.bot:
         return
+
+    await check_and_ban_link_spammer(message)
 
     if bot.user in message.mentions:
         await message.channel.send(f"Hi {message.author.display_name}!")
