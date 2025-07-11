@@ -3,7 +3,7 @@ from typing import Optional
 
 from flask import Flask, request
 import asyncio
-import logging
+from logging import getLogger, ERROR, INFO
 import aiohttp
 import discord
 import discord.ext
@@ -18,13 +18,14 @@ BRANCH = "main"
 BASE_URL = f"https://raw.githubusercontent.com/{REPO}/refs/heads/{BRANCH}"
 API_URL = f"https://api.github.com/repos/{REPO}"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 app = Flask(__name__)
 webhook_output_channel: Optional[discord.channel] = None
 flask_started = False
 webhook_bot: Optional[discord.Bot] = None
 
-async def setup_webhook(bot: discord.Bot):
+
+async def setup_changelog_update_webhook(bot: discord.Bot):
     global flask_started, webhook_output_channel, webhook_bot
 
     webhook_output_channel = bot.get_channel(WellKnownChannels.BotSetup)
@@ -136,14 +137,14 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
     title = f"Release {version}" + ("" if tag_exists else " (WIP)")
 
     if len(changelog) > 4096:
-        logger.log(msg=f"Changelog too long ({len(changelog)} chars) — must be ≤ 4096 for embed.", level=logging.ERROR)
+        logger.log(msg=f"Changelog too long ({len(changelog)} chars) — must be ≤ 4096 for embed.", level=ERROR)
         return
 
     embed = discord.Embed(title=title, description=changelog, color=0xFF4F00)
 
     channel = bot.get_channel(channel_id)
     if not channel:
-        logger.log(msg=f"Channel {channel_id} not found.", level=logging.ERROR)
+        logger.log(msg=f"Channel {channel_id} not found.", level=ERROR)
         return
 
     msg_id_file = f"_Publish/Changelogs/{mod_slug}_MessageID.txt"
@@ -158,7 +159,7 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
             msg = await channel.send(embed=embed)
             await write_message_id_file(session, mod_slug, msg.id)
 
-        logger.log(msg=f"Updated embed for {mod_slug} ({len(changelog)} chars)", level=logging.INFO)
+        logger.log(msg=f"Updated embed for {mod_slug} ({len(changelog)} chars)", level=INFO)
 
     except Exception as e:
-        logger.log(msg=f"Error posting embed for {mod_slug}: {e}", level=logging.ERROR)
+        logger.log(msg=f"Error posting embed for {mod_slug}: {e}", level=ERROR)

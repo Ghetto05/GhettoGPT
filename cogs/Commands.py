@@ -1,4 +1,4 @@
-import logging
+from logging import getLogger, INFO
 
 import discord.ext
 from discord import Bot, slash_command
@@ -7,7 +7,7 @@ from discord.commands import option
 from FakeIPGetter import generate_public_ipv4
 from ChangelogUpdate import run_changelog_update
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 class Commands(discord.Cog):
@@ -32,5 +32,5 @@ class Commands(discord.Cog):
 
 
 def setup(bot: Bot):
-    logger.log(msg=f"Registering commands", level=logging.INFO)
+    logger.log(msg=f"Registering commands", level=INFO)
     bot.add_cog(Commands(bot))

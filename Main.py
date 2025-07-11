@@ -3,9 +3,8 @@ import os
 import discord
 from discord.ext import commands
 
-import FakeIPGetter
 import WellKnownChannels
-import ChangelogUpdate
+from ChangelogUpdate import setup_changelog_update_webhook
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
@@ -22,14 +21,12 @@ extensions = ("cogs.Commands",)
 for extension in extensions:
     bot.load_extension(extension)
 
-bot.get_channel(WellKnownChannels.BotSetup).send("Starting up...")
-
 
 @bot.event
 async def on_ready():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     logger.log(msg=f"Logged in as {bot.user}", level=logging.INFO)
-    await mod_changelog_update.setup_webhook(bot)
+    await setup_changelog_update_webhook(bot)
 
 
 @bot.event
@@ -49,3 +46,4 @@ if __name__ == "__main__":
         logger.log(msg="DISCORD_TOKEN is missing.", level=logging.ERROR)
         exit(1)
     bot.run(DISCORD_TOKEN)
+    bot.get_channel(WellKnownChannels.BotSetup).send("Starting up...")
