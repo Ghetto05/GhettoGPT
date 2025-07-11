@@ -1,7 +1,8 @@
 import hashlib
 
 
-def generate_public_ipv4(number_str):
+def generate_public_ipv4(number_int):
+    number_str = str(number_int)
     if not number_str.isdigit() or len(number_str) != 18:
         raise ValueError("Input must be a string of exactly 18 digits.")
 
