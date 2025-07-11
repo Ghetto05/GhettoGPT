@@ -5,7 +5,7 @@ from discord.ext import commands
 
 import FakeIPGetter
 import WellKnownChannels
-import mod_changelog_update
+import ChangelogUpdate
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 

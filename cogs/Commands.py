@@ -5,7 +5,7 @@ from discord import Bot, slash_command
 from discord.commands import option
 
 from FakeIPGetter import generate_public_ipv4
-from mod_changelog_update import run_changelog_update
+from ChangelogUpdate import run_changelog_update
 
 logger = logging.getLogger(__name__)
 
