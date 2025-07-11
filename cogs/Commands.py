@@ -28,7 +28,7 @@ class Commands(discord.Cog):
         required=True
     )
     async def grab_ip(self, ctx: discord.ApplicationContext, user: discord.User):
-        await ctx.respond(f"{user.display_name}'s IP is {generate_public_ipv4(user.id)}.")
+        await ctx.respond(f"\"{user.display_name}\"'s IP is {generate_public_ipv4(user.id)}")
 
 
 def setup(bot: Bot):
