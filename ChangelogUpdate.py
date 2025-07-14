@@ -44,10 +44,16 @@ def run_flask():
 def changelog_webhook():
     if webhook_output_channel:
         asyncio.run_coroutine_threadsafe(
-            webhook_output_channel.send(f"Changelog update triggered by webhook"),
+            run_changelog_webhook_update(),
             webhook_bot.loop
         )
     return '', 204
+
+
+async def run_changelog_webhook_update():
+    await webhook_output_channel.send(f"Changelog update triggered by webhook")
+    await run_changelog_update(webhook_bot)
+    await webhook_output_channel.send(f"Changelog update done")
 
 
 async def run_changelog_update(bot: discord.Bot):
