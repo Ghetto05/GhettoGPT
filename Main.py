@@ -40,7 +40,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message: discord.Message):
-    logger.log(msg=f"Message received {message.author.display_name}: {message.content}", level=logging.INFO)
+    logger.log(msg=f"Message received ({message.author.display_name}): {message.content}", level=logging.INFO)
     if message.author.bot:
         return
 
