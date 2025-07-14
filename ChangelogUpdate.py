@@ -23,6 +23,7 @@ app = Flask(__name__)
 webhook_output_channel: Optional[discord.channel] = None
 flask_started = False
 webhook_bot: Optional[discord.Bot] = None
+webhook_update_running = False
 
 
 async def setup_changelog_update_webhook(bot: discord.Bot):
@@ -51,9 +52,15 @@ def changelog_webhook():
 
 
 async def run_changelog_webhook_update():
+    global webhook_update_running
+    if webhook_update_running:
+        logger.log(msg="Changelog update already running", level=ERROR)
+        return
+    webhook_update_running = True
     await webhook_output_channel.send(f"Changelog update triggered by webhook")
     await run_changelog_update(webhook_bot)
     await webhook_output_channel.send(f"Changelog update done")
+    webhook_update_running = False
 
 
 async def run_changelog_update(bot: discord.Bot):
