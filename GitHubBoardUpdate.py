@@ -13,13 +13,16 @@ logger = getLogger(__name__)
 
 async def update_github_board(bot: Bot):
     status_issue_groups = await fetch_project_issues()
-    message_content = f"# GitHub Issue Board\nLast update: <t:{int(discord.utils.utcnow().timestamp())}:f>\n"
+    message_content = f"Last update: <t:{int(discord.utils.utcnow().timestamp())}:f>\n"
     for status, issues in status_issue_groups.items():
+        if status == "Closed":
+            continue
         message_content += f"\n## {status}"
         for issue in issues:
-            message_content += f"- #{issue['number']}: {issue['title']} (Last activity: {issue['last_activity']})\n"
+            message_content += f"- #{issue['number']}: {issue['title']}\n"
+    embed = discord.Embed(title="# GitHub Issue Board", description=message_content, color=0xFF4F00)
     message = await bot.get_channel(WellKnown.channel_github_board).fetch_message(WellKnown.message_github_board)
-    await message.edit(content=message_content)
+    await message.edit(embed=embed)
 
 
 async def fetch_project_issues():
@@ -39,12 +42,6 @@ async def fetch_project_issues():
                 ... on Issue {
                   title
                   number
-                  updatedAt
-                  comments(last: 1) {
-                    nodes {
-                      updatedAt
-                    }
-                  }
                 }
               }
               fieldValues(first: 10) {
@@ -75,9 +72,6 @@ async def fetch_project_issues():
 
                 title = content["title"]
                 number = content["number"]
-                updated_at = content["updatedAt"]
-                comments = content.get("comments", {}).get("nodes", [])
-                last_comment = comments[0]["updatedAt"] if comments else updated_at
 
                 status = "Unknown"
                 for field in item["fieldValues"]["nodes"]:
@@ -88,7 +82,6 @@ async def fetch_project_issues():
                 issues_by_status[status].append({
                     "title": title,
                     "number": number,
-                    "last_activity": last_comment,
                 })
 
             return issues_by_status
