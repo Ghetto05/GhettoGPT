@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from logging import getLogger
 import aiohttp
 import os
@@ -11,11 +13,25 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 logger = getLogger(__name__)
 
 
+async def setup_github_board_update(bot: Bot):
+    bot.loop.create_task(run_periodic_update(bot))
+
+
+async def run_periodic_update(bot: Bot):
+    while True:
+        try:
+            logger.log(msg="Updating GitHub Board", level=logging.INFO)
+            await update_github_board(bot)
+        except Exception as e:
+            logger.log(msg="Error in updating GitHub board: {e}", level=logging.ERROR)
+        await asyncio.sleep(60 * 60)
+
+
 async def update_github_board(bot: Bot):
     status_issue_groups = await fetch_project_issues()
     message_content = f"# GitHub Issue Board\nLast update: <t:{int(discord.utils.utcnow().timestamp())}:f>\n"
     for status, issues in status_issue_groups.items():
-        if status == "Closed":
+        if status not in [ "Backlog", "ToDo", "Testing", ]:
             continue
         message_content += f"\n## {status}\n"
         for issue in issues:
