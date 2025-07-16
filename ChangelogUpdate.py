@@ -66,7 +66,7 @@ async def run_changelog_webhook_update():
 
 async def run_changelog_update(bot: discord.Bot):
     async with aiohttp.ClientSession() as session:
-        channels = await get_mappings(session, "_Publish/ChangelogChannels.md")
+        channels = await get_mappings(session, "ChangelogChannels.md")
 
         for mod, channel_id in channels.items():
             versions = await get_all_changelog_versions(session, mod)
@@ -96,7 +96,7 @@ async def check_tag_exists(session, tag_name):
 
 
 async def write_message_id_file(session, mod_slug, msg_id):
-    path = f"_Publish/Changelogs/{mod_slug}_MessageID.txt"
+    path = f"Changelogs/{mod_slug}_MessageID.txt"
     url = f"{API_URL.format(REPO)}/contents/{path}"
     content = str(msg_id).encode("utf-8")
     encoded = base64.b64encode(content).decode()
@@ -127,7 +127,7 @@ async def get_mappings(session, file_path):
 
 
 async def get_all_changelog_versions(session, mod):
-    url = f"{API_URL.format(REPO)}/contents/_Publish/Changelogs"
+    url = f"{API_URL.format(REPO)}/contents/Changelogs"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
     async with session.get(url, headers=headers) as resp:
         if resp.status != 200:
@@ -143,7 +143,7 @@ async def get_all_changelog_versions(session, mod):
 
 async def process_changelog(session, bot: discord.Bot, mod, version, channel_id):
     mod_slug = f"{mod}_{version}"
-    changelog = await fetch_raw_file(session, f"_Publish/Changelogs/{mod_slug}.md")
+    changelog = await fetch_raw_file(session, f"Changelogs/{mod_slug}.md")
     if not changelog:
         return
 
@@ -161,7 +161,7 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
         logger.log(msg=f"Channel {channel_id} not found.", level=ERROR)
         return
 
-    msg_id_file = f"_Publish/Changelogs/{mod_slug}_MessageID.txt"
+    msg_id_file = f"Changelogs/{mod_slug}_MessageID.txt"
     msg_id_raw = await fetch_raw_file(session, msg_id_file)
     msg_id = int(msg_id_raw.strip()) if msg_id_raw and msg_id_raw.strip().isdigit() else None
 
