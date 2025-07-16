@@ -1,6 +1,9 @@
 channel_bot_setup = 991787747977220257
 channel_moderators = 954746778006216774
+channel_github_board = 1395175095630041221
 
 user_ghetto05 = 714263935746048072
 
 role_moderator = 954741893361713242
+
+message_github_board = 1395180150764867758

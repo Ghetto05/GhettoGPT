@@ -5,8 +5,9 @@ from collections import defaultdict
 import discord
 from discord import Bot
 
+import WellKnown
+
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-MESSAGE_ID = 1395180150764867758
 logger = getLogger(__name__)
 
 
@@ -17,7 +18,7 @@ async def update_github_board(bot: Bot):
         message_content += f"\n## {status}"
         for issue in issues:
             message_content += f"- #{issue['number']}: {issue['title']} (Last activity: {issue['last_activity']})\n"
-    await bot.get_message(MESSAGE_ID).edit(content=message_content)
+    await bot.get_channel(WellKnown.channel_github_board).fetch_message(WellKnown.message_github_board).edit(content=message_content)
 
 
 async def fetch_project_issues():
