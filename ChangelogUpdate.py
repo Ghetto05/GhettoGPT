@@ -13,10 +13,10 @@ import os
 
 import WellKnown
 
-MODDING_REPO = "Ghetto05/Mods"
-REPO = "Ghetto05/Mods"
-BRANCH = "main"
-BASE_URL = f"https://raw.githubusercontent.com/{REPO}/refs/heads/{BRANCH}"
+TAG_REPO = "Ghetto05/Mods"
+FILE_REPO = "Ghetto05/GhettosModding"
+FILE_BRANCH = "master"
+BASE_URL = f"https://raw.githubusercontent.com/{FILE_REPO}/refs/heads/{FILE_BRANCH}"
 API_URL = "https://api.github.com/repos/{}"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 logger = getLogger(__name__)
@@ -89,7 +89,7 @@ async def fetch_json(session, url):
 
 
 async def check_tag_exists(session, tag_name):
-    url = f"{API_URL.format(MODDING_REPO)}/git/ref/tags/{tag_name}"
+    url = f"{API_URL.format(TAG_REPO)}/git/ref/tags/{tag_name}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
     async with session.get(url, headers=headers) as resp:
         return resp.status == 200
@@ -97,7 +97,7 @@ async def check_tag_exists(session, tag_name):
 
 async def write_message_id_file(session, mod_slug, msg_id):
     path = f"Changelogs/{mod_slug}_MessageID.txt"
-    url = f"{API_URL.format(REPO)}/contents/{path}"
+    url = f"{API_URL.format(FILE_REPO)}/contents/{path}"
     content = str(msg_id).encode("utf-8")
     encoded = base64.b64encode(content).decode()
 
@@ -107,7 +107,7 @@ async def write_message_id_file(session, mod_slug, msg_id):
     payload = {
         "message": f"Update MessageID for {mod_slug}",
         "content": encoded,
-        "branch": BRANCH,
+        "branch": FILE_BRANCH,
         **({"sha": sha} if sha else {})
     }
 
@@ -127,7 +127,7 @@ async def get_mappings(session, file_path):
 
 
 async def get_all_changelog_versions(session, mod):
-    url = f"{API_URL.format(REPO)}/contents/Changelogs"
+    url = f"{API_URL.format(FILE_REPO)}/contents/Changelogs"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
     async with session.get(url, headers=headers) as resp:
         if resp.status != 200:
