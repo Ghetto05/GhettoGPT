@@ -13,14 +13,14 @@ logger = getLogger(__name__)
 
 async def update_github_board(bot: Bot):
     status_issue_groups = await fetch_project_issues()
-    message_content = f"Last update: <t:{int(discord.utils.utcnow().timestamp())}:f>\n"
+    message_content = f"# GitHub Issue Board\nLast update: <t:{int(discord.utils.utcnow().timestamp())}:f>\n"
     for status, issues in status_issue_groups.items():
         if status == "Closed":
             continue
-        message_content += f"\n## {status}"
+        message_content += f"\n## {status}\n"
         for issue in issues:
             message_content += f"- #{issue['number']}: {issue['title']}\n"
-    embed = discord.Embed(title="# GitHub Issue Board", description=message_content, color=0xFF4F00)
+    embed = discord.Embed(description=message_content, color=0xFF4F00)
     message = await bot.get_channel(WellKnown.channel_github_board).fetch_message(WellKnown.message_github_board)
     await message.edit(embed=embed)
 
