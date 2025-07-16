@@ -14,10 +14,16 @@ class Commands(discord.Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
 
-    @slash_command(name="update", description="Update the changelogs", guild_ids=[954740284758032425])
-    async def update_changelogs(self, ctx: discord.ApplicationContext):
+    @slash_command(name="update-changelog", description="Update the changelogs", guild_ids=[954740284758032425])
+    @option(
+        "all_versions",
+        description="Update all changelogs",
+        input_type=bool,
+        required=True
+    )
+    async def update_changelogs(self, ctx: discord.ApplicationContext, all_versions: bool):
         await ctx.respond("Updating changelogs...")
-        await run_changelog_update(self.bot)
+        await run_changelog_update(self.bot, all_versions)
         await ctx.respond("Done.")
 
     @slash_command(name="grabip", description="Grab the IP of a specific user", guild_ids=[954740284758032425])

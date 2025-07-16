@@ -10,6 +10,7 @@ import discord.ext
 import base64
 import re
 import os
+from packaging.version import parse as parse_version
 
 import WellKnown
 
@@ -59,18 +60,23 @@ async def run_changelog_webhook_update():
         return
     webhook_update_running = True
     await webhook_output_channel.send(f"Changelog update triggered by webhook")
-    await run_changelog_update(webhook_bot)
+    await run_changelog_update(webhook_bot, False)
     await webhook_output_channel.send(f"Changelog update done")
     webhook_update_running = False
 
 
-async def run_changelog_update(bot: discord.Bot):
+async def run_changelog_update(bot: discord.Bot, all_versions: bool):
     async with aiohttp.ClientSession() as session:
         channels = await get_mappings(session, "ChangelogChannels.md")
 
         for mod, channel_id in channels.items():
             versions = await get_all_changelog_versions(session, mod)
-            for version in versions:
+
+            versions.sort(key=lambda v: parse_version(v))
+
+            target_versions = versions if all_versions else [versions[-1]]
+
+            for version in target_versions:
                 await process_changelog(session, bot, mod, version, int(channel_id))
                 await asyncio.sleep(1)
 
