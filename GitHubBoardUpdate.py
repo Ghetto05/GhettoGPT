@@ -31,7 +31,7 @@ async def update_github_board(bot: Bot):
     status_issue_groups = await fetch_project_issues()
     message_content = f"# GitHub Issue Board\nLast update: <t:{int(discord.utils.utcnow().timestamp())}:f>\n"
     for status, issues in status_issue_groups.items():
-        if status not in [ "Backlog", "Urgent ToDo", "Testing", ]:
+        if status not in [ "Backlog", "Urgent ToDo", "In progress", "Testing", ]:
             continue
         message_content += f"\n## {status}\n"
         for issue in issues:
