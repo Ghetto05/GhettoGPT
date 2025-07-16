@@ -36,7 +36,7 @@ class Commands(discord.Cog):
         await ctx.respond(f"\"{user.display_name}\"'s IP is {generate_public_ipv4(user.id)}")
 
     @slash_command(name="update-github-board", description="Update the GitHub issue board", guild_ids=[954740284758032425])
-    async def update_changelogs(self, ctx: discord.ApplicationContext):
+    async def update_github_board(self, ctx: discord.ApplicationContext):
         await ctx.respond("Updating GitHub issues...")
         await update_github_board(self.bot)
         await ctx.respond("Done.")
