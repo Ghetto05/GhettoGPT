@@ -18,7 +18,8 @@ async def update_github_board(bot: Bot):
         message_content += f"\n## {status}"
         for issue in issues:
             message_content += f"- #{issue['number']}: {issue['title']} (Last activity: {issue['last_activity']})\n"
-    await bot.get_channel(WellKnown.channel_github_board).fetch_message(WellKnown.message_github_board).edit(content=message_content)
+    message = await bot.get_channel(WellKnown.channel_github_board).fetch_message(WellKnown.message_github_board)
+    await message.edit(content=message_content)
 
 
 async def fetch_project_issues():
