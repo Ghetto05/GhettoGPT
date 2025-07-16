@@ -22,7 +22,7 @@ async def update_github_board(bot: Bot):
             message_content += f"- #{issue['number']}: {issue['title']}\n"
     embed = discord.Embed(description=message_content, color=0xFF4F00)
     message = await bot.get_channel(WellKnown.channel_github_board).fetch_message(WellKnown.message_github_board)
-    await message.edit(embed=embed)
+    await message.edit(content="", embed=embed)
 
 
 async def fetch_project_issues():
