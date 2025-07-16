@@ -29,7 +29,7 @@ async def on_ready():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     logger.log(msg=f"Logged in as {bot.user}", level=logging.INFO)
 
-    # start up message
+    # startup message
     global initialized
     if not initialized:
         initialized = True
@@ -47,6 +47,9 @@ async def on_message(message: discord.Message):
     await check_and_ban_link_spammer(message, bot)
 
     await bot.process_commands(message)
+
+    if bot.user in message.mentions and message.author.id == WellKnown.user_ghetto05 and "send a message here please" in message.content:
+        await message.channel.send("This is a message")
 
 
 if __name__ == "__main__":
