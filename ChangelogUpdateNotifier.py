@@ -61,7 +61,7 @@ async def fetch_summary() -> str:
 
 
 async def fetch_added_lines():
-    since = (discord.utils.utcnow() - timedelta(days=7)).isoformat() + "Z"
+    since = (discord.utils.utcnow() - timedelta(hours=11, minutes=26)).isoformat() + "Z"
     headers = {
         "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
