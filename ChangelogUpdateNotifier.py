@@ -14,13 +14,13 @@ def setup_changelog_summary_scheduler(bot: Bot, scheduler: AsyncIOScheduler):
     update_bot = bot
     scheduler.add_job(
         send_weekly_changelog_summary,
-        CronTrigger(day_of_week='friday', hour=12, minute=0, timezone='UTC')
+        CronTrigger(day_of_week='fri', hour=12, minute=0, timezone='UTC')
     )
 
     # test job
     scheduler.add_job(
         send_weekly_changelog_summary,
-        CronTrigger(day_of_week='thursday', hour=8, minute=30, timezone='UTC')
+        CronTrigger(day_of_week='thu', hour=8, minute=36, timezone='UTC')
     )
 
 
