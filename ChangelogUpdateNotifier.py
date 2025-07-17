@@ -76,7 +76,7 @@ async def fetch_summary() -> str:
 
 
 async def fetch_added_lines():
-    since_dt = discord.utils.utcnow() - timedelta(hours=14)
+    since_dt = discord.utils.utcnow() - timedelta(days=7)
     since_iso = since_dt.isoformat() + "Z"
 
     headers = {
