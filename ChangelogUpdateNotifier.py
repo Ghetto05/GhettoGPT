@@ -35,7 +35,7 @@ async def send_weekly_changelog_summary():
     message = "There were no changes this week."
     if changes != "None":
         message = "The following changes were added:\n\n" + changes
-    await channel.send(f"{mention}\n{message}")
+    await channel.send(content=f"{mention}", embed=discord.Embed(description=message[:4000], color=0xFF4F00))
 
 
 async def send_changelog_update(bot: Bot):
