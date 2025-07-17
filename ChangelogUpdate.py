@@ -82,7 +82,7 @@ async def run_changelog_update(bot: discord.Bot, all_versions: bool):
                 await asyncio.sleep(1)
 
 
-async def fetch_raw_file(session, path):
+async def fetch_raw_file(session, path) -> str:
     url = f"{BASE_URL}/{path}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3.raw"}
     async with session.get(url, headers=headers) as resp:
@@ -177,13 +177,13 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
             original_msg = await channel.fetch_message(msg_id)
             original_changelog = original_msg.embeds[0].description
             await original_msg.edit(content=None, embed=embed)
-            await send_changelog_update_notification(bot, mod_slug, original_changelog, changelog)
+            await send_changelog_update_notification(bot, mod_slug, original_changelog, changelog.strip())
         else:
             msg = await channel.send(embed=embed)
             await write_message_id_file(session, mod_slug, msg.id)
-            await send_changelog_update_notification(bot, mod_slug, "", changelog)
+            await send_changelog_update_notification(bot, mod_slug, "", changelog.strip())
 
-        logger.log(msg=f"Updated embed for {mod_slug} ({len(changelog)} chars)", level=INFO)
+        logger.log(msg=f"Updated embed for {mod_slug} ({len(changelog.strip())} chars)", level=INFO)
 
     except Exception as e:
         logger.log(msg=f"Error posting embed for {mod_slug}: {e}", level=ERROR)
