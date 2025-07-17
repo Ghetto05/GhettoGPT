@@ -1,3 +1,4 @@
+import base64
 import difflib
 import logging
 import os
@@ -112,7 +113,6 @@ async def fetch_added_lines():
                 # File is new — include entire content
                 async with session.get(f"{base_url}/contents/{filename}") as resp:
                     file_data = await resp.json()
-                import base64
                 content = base64.b64decode(file_data["content"]).decode("utf-8")
                 lines = [line.strip() for line in content.splitlines() if line.strip()]
                 additions_by_file[filename].extend(lines)
