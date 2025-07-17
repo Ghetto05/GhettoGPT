@@ -46,7 +46,7 @@ class Commands(discord.Cog):
     async def test_changelog_update(self, ctx: discord.ApplicationContext):
         await ctx.respond("Testing changelog update...")
         await ChangelogUpdateNotifier.send_changelog_update(self.bot)
-        await ChangelogUpdateNotifier.send_weekly_changelog_summary(self.bot)
+        await ChangelogUpdateNotifier.send_weekly_changelog_summary()
         await ctx.respond("Done.")
 
 
