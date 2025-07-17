@@ -31,7 +31,7 @@ async def send_changelog_update_notification(bot: Bot, file: str, old_content: s
 
     channel = bot.get_channel(WellKnown.channel_changelog_update)
     mention = channel.guild.get_role(WellKnown.role_changelog_update).mention
-    await channel.send(f"{mention}\nUpdate to\n## {file}\n".join(additions))
+    await channel.send(f"{mention}\nUpdate to\n## {file}\n" + "\n".join(additions))
 
 
 def setup_changelog_summary_scheduler(bot: Bot, scheduler: AsyncIOScheduler):
