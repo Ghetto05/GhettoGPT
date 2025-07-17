@@ -50,10 +50,14 @@ async def fetch_project_issues():
     }
 
     query = """
-    query {
+    query($after: String) {
       user(login: "Ghetto05") {
         projectV2(number: 3) {
-          items(first: 100) {
+          items(first: 100, after: $after) {
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
             nodes {
               content {
                 ... on Issue {
@@ -75,30 +79,42 @@ async def fetch_project_issues():
     }
     """
 
+    issues_by_status = defaultdict(list)
+    has_next_page = True
+    after = None
+
     async with aiohttp.ClientSession() as session:
-        async with session.post(url, json={'query': query}, headers=headers) as resp:
-            data = await resp.json()
+        while has_next_page:
+            variables = {"after": after}
+            async with session.post(url, json={"query": query, "variables": variables}, headers=headers) as resp:
+                data = await resp.json()
 
-            issues_by_status = defaultdict(list)
+                try:
+                    items_data = data["data"]["user"]["projectV2"]["items"]
+                except KeyError:
+                    logging.error(f"GitHub API error: {data}")
+                    break
 
-            items = data["data"]["user"]["projectV2"]["items"]["nodes"]
-            for item in items:
-                content = item.get("content")
-                if not content:
-                    continue
+                for item in items_data["nodes"]:
+                    content = item.get("content")
+                    if not content:
+                        continue
 
-                title = content["title"]
-                number = content["number"]
+                    title = content["title"]
+                    number = content["number"]
 
-                status = "Unknown"
-                for field in item["fieldValues"]["nodes"]:
-                    if "name" in field:
-                        status = field["name"]
-                        break
+                    status = "Unknown"
+                    for field in item["fieldValues"]["nodes"]:
+                        if "name" in field:
+                            status = field["name"]
+                            break
 
-                issues_by_status[status].append({
-                    "title": title,
-                    "number": number,
-                })
+                    issues_by_status[status].append({
+                        "title": title,
+                        "number": number,
+                    })
 
-            return issues_by_status
+                has_next_page = items_data["pageInfo"]["hasNextPage"]
+                after = items_data["pageInfo"]["endCursor"]
+
+    return issues_by_status
