@@ -18,12 +18,6 @@ def setup_changelog_summary_scheduler(bot: Bot, scheduler: AsyncIOScheduler):
         CronTrigger(day_of_week='fri', hour=12, minute=0, timezone='UTC')
     )
 
-    # test job
-    scheduler.add_job(
-        send_weekly_changelog_summary,
-        CronTrigger(day_of_week='thu', hour=8, minute=36, timezone='UTC')
-    )
-
 
 async def send_weekly_changelog_summary():
     logger.log(msg="Sending weekly changelog summary", level=logging.INFO)

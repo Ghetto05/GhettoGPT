@@ -25,7 +25,7 @@ def setup_github_board_update(bot: Bot, scheduler: AsyncIOScheduler):
     global update_bot
     update_bot = bot
     # Round to next hour
-    next_hour = (discord.utils.utcnow().replace(minute=0, second=0, microsecond=0) + timedelta(minutes=update_interval_minutes))
+    next_hour = get_next_interval()
 
     # Schedule first run at the top of the next hour
     scheduler.add_job(
@@ -48,6 +48,17 @@ async def run_periodic_update():
         except Exception as e:
             logger.log(msg="Error in updating GitHub board: {e}", level=logging.ERROR)
         await asyncio.sleep(60 * 60)
+
+
+def get_next_interval():
+    now = discord.utils.utcnow().replace(second=0, microsecond=0)
+    minute = (now.minute // update_interval_minutes + 1) * update_interval_minutes
+    next_run = now.replace(minute=0) + timedelta(minutes=minute)
+
+    if next_run.minute >= 60:
+        next_run = next_run.replace(minute=0) + timedelta(hours=1)
+
+    return next_run
 
 
 async def update_github_board(bot: Bot):
