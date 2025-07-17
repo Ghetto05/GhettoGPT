@@ -66,7 +66,7 @@ def get_next_interval():
 async def update_github_board(bot: Bot):
     status_issue_groups = await fetch_project_issues()
     now = discord.utils.utcnow()
-    next_run = now.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=update_interval_minutes)
+    next_run = get_next_interval() + timedelta(minutes=update_interval_minutes)
     message_content = f"# GitHub Issue Board\nLast update: <t:{int(now.timestamp())}:f>\nNext update: <t:{int(next_run.timestamp())}:R>\n"
     for status, issues in status_issue_groups.items():
         if status not in [ "Backlog", "Urgent ToDo", "In progress", "Testing", ]:
