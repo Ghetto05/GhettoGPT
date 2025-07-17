@@ -55,7 +55,7 @@ async def send_weekly_changelog_summary():
     changes = await fetch_summary()
     message = "There were no changes this week."
     if changes != "None":
-        message = "The following changes were added in the past week:\n\n" + changes
+        message = f"The following changes were added in the past week:\n\n{changes}\n\n**NOTE:**\nChanges that were previously added may have been removed.\nThis summary only shows additions since the last week\nIf you want to see all changes, please check the respective changelog channel."
     await channel.send(content=f"{mention}", embed=discord.Embed(description=message[:4000], color=0xFF4F00))
 
 
