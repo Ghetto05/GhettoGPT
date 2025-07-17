@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from datetime import timedelta
 from logging import getLogger
 import aiohttp
 import os
@@ -29,7 +30,7 @@ async def run_periodic_update(bot: Bot):
 
 async def update_github_board(bot: Bot):
     status_issue_groups = await fetch_project_issues()
-    message_content = f"# GitHub Issue Board\nLast update: <t:{int(discord.utils.utcnow().timestamp())}:f>\n"
+    message_content = f"# GitHub Issue Board\nLast update: <t:{int(discord.utils.utcnow().timestamp())}:f>\nNext update: <t:{int((discord.utils.utcnow() + timedelta(hours=1)).timestamp())}:R>\n"
     for status, issues in status_issue_groups.items():
         if status not in [ "Backlog", "Urgent ToDo", "In progress", "Testing", ]:
             continue
