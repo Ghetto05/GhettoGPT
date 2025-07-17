@@ -20,6 +20,11 @@ update_bot: Optional[Bot] = None
 
 
 async def send_changelog_update_notification(bot: Bot, file: str, old_content: str, new_content: str):
+    if not old_content.endswith("\n"):
+        old_content += "\n"
+    if not new_content.endswith("\n"):
+        new_content += "\n"
+
     old_lines = old_content.splitlines()
     new_lines = new_content.splitlines()
     diff = difflib.unified_diff(old_lines, new_lines, lineterm="")
@@ -29,9 +34,12 @@ async def send_changelog_update_notification(bot: Bot, file: str, old_content: s
         if line.startswith("+") and not line.startswith("+++"):
             additions.append(line[1:].strip())
 
+    if len(additions) == 0:
+        return
+
     channel = bot.get_channel(WellKnown.channel_changelog_update)
     mention = channel.guild.get_role(WellKnown.role_changelog_update).mention
-    await channel.send(f"{mention}\nUpdate to\n## {file}\n" + "\n".join(additions))
+    await channel.send(f"{mention}\nUpdate to\n**{file}**\n" + "\n".join(additions))
 
 
 def setup_changelog_summary_scheduler(bot: Bot, scheduler: AsyncIOScheduler):
