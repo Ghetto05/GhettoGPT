@@ -1,3 +1,4 @@
+import difflib
 import logging
 import os
 from collections import defaultdict
@@ -18,6 +19,21 @@ logger = getLogger(__name__)
 update_bot: Optional[Bot] = None
 
 
+async def send_changelog_update_notification(bot: Bot, file: str, old_content: str, new_content: str):
+    old_lines = old_content.splitlines()
+    new_lines = new_content.splitlines()
+    diff = difflib.unified_diff(old_lines, new_lines, lineterm="")
+
+    additions = []
+    for line in diff:
+        if line.startswith("+") and not line.startswith("+++"):
+            additions.append(line[1:].strip())
+
+    channel = bot.get_channel(WellKnown.channel_changelog_update)
+    mention = channel.guild.get_role(WellKnown.role_changelog_update).mention
+    await channel.send(f"{mention}\nUpdate to\n## {file}\n".join(additions))
+
+
 def setup_changelog_summary_scheduler(bot: Bot, scheduler: AsyncIOScheduler):
     global update_bot
     update_bot = bot
@@ -34,14 +50,8 @@ async def send_weekly_changelog_summary():
     changes = await fetch_summary()
     message = "There were no changes this week."
     if changes != "None":
-        message = "The following changes were added:\n\n" + changes
+        message = "The following changes were added in the past week:\n\n" + changes
     await channel.send(content=f"{mention}", embed=discord.Embed(description=message[:4000], color=0xFF4F00))
-
-
-async def send_changelog_update(bot: Bot):
-    channel = bot.get_channel(WellKnown.channel_changelog_update)
-    mention = channel.guild.get_role(WellKnown.role_changelog_update).mention
-    await channel.send(f"{mention}\n")
 
 
 async def fetch_summary() -> str:

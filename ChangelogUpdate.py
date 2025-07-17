@@ -13,6 +13,7 @@ import os
 from packaging.version import parse as parse_version
 
 import WellKnown
+from ChangelogUpdateNotifier import send_changelog_update_notification
 
 TAG_REPO = "Ghetto05/Mods"
 FILE_REPO = "Ghetto05/GhettosModding"
@@ -174,10 +175,13 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
     try:
         if msg_id:
             original_msg = await channel.fetch_message(msg_id)
+            original_changelog = original_msg.embeds[0].description
             await original_msg.edit(content=None, embed=embed)
+            await send_changelog_update_notification(bot, mod_slug, original_changelog, changelog)
         else:
             msg = await channel.send(embed=embed)
             await write_message_id_file(session, mod_slug, msg.id)
+            await send_changelog_update_notification(bot, mod_slug, "", changelog)
 
         logger.log(msg=f"Updated embed for {mod_slug} ({len(changelog)} chars)", level=INFO)
 
