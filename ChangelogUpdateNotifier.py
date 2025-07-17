@@ -20,19 +20,15 @@ update_bot: Optional[Bot] = None
 
 
 async def send_changelog_update_notification(bot: Bot, file: str, old_content: str, new_content: str):
-    if not old_content.endswith("\n"):
-        old_content += "\n"
-    if not new_content.endswith("\n"):
-        new_content += "\n"
-
     old_lines = old_content.splitlines()
     new_lines = new_content.splitlines()
-    diff = difflib.unified_diff(old_lines, new_lines, lineterm="")
 
+    matcher = difflib.SequenceMatcher(None, old_lines, new_lines)
     additions = []
-    for line in diff:
-        if line.startswith("+") and not line.startswith("+++"):
-            additions.append(line[1:].strip())
+
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "insert":
+            additions.extend(new_lines[j1:j2])
 
     if len(additions) == 0:
         return
