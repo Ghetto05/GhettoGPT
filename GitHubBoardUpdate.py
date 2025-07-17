@@ -27,19 +27,19 @@ def setup_github_board_update(bot: Bot, scheduler: AsyncIOScheduler):
     # Round to next hour
     next_hour = get_next_interval()
 
-    # Schedule first run at the top of the next hour
+    # Schedule first run at the top of the next update_interval_minutes relative to the current hour
     scheduler.add_job(
         run_periodic_update,
         trigger=DateTrigger(run_date=next_hour)
     )
-    logger.log(msg=f"Next GitHub Board update scheduled for {next_hour}", level=logging.INFO)
+    logger.log(msg=f"Next GitHub Board update scheduled for {next_hour} UTC", level=logging.INFO)
 
-    # Schedule recurring run every hour after that
+    # Schedule recurring run every update_interval_minutes minutes after that
     scheduler.add_job(
         run_periodic_update,
         trigger=IntervalTrigger(minutes=update_interval_minutes, start_date=next_hour)
     )
-    logger.log(msg=f"GitHub Board update scheduled to run every {update_interval_minutes} starting at {next_hour}", level=logging.INFO)
+    logger.log(msg=f"GitHub Board update scheduled to run every {update_interval_minutes} minutes starting at {next_hour} UTC", level=logging.INFO)
 
 
 async def run_periodic_update():
