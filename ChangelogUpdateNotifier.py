@@ -27,7 +27,7 @@ async def send_changelog_update_notification(bot: Bot, file: str, old_content: s
     additions = []
 
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-        if tag == "insert":
+        if tag == "insert" or tag == "replace":
             additions.extend(new_lines[j1:j2])
 
     if len(additions) == 0:
