@@ -23,6 +23,8 @@ async def send_changelog_update_notification(bot: Bot, file: str, old_content: s
     old_lines = old_content.splitlines()
     new_lines = new_content.splitlines()
 
+    logger.log(msg=f"Old content:\n{old_content}\n\n\nNew content:\n{new_content}", level=logging.INFO)
+
     matcher = difflib.SequenceMatcher(None, old_lines, new_lines)
     additions = []
 
