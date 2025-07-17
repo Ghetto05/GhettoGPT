@@ -20,7 +20,7 @@ logger = getLogger(__name__)
 update_bot: Optional[Bot] = None
 
 
-async def setup_github_board_update(bot: Bot, scheduler: AsyncIOScheduler):
+def setup_github_board_update(bot: Bot, scheduler: AsyncIOScheduler):
     global update_bot
     update_bot = bot
     # Round to next hour

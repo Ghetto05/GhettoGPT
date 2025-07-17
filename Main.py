@@ -38,8 +38,8 @@ async def on_ready():
         scheduler = AsyncIOScheduler()
         scheduler.start()
         setup_changelog_summary_scheduler(bot, scheduler)
+        setup_github_board_update(bot, scheduler)
         await setup_changelog_update_webhook(bot)
-        await setup_github_board_update(bot)
         await bot.get_channel(WellKnown.channel_bot_setup).send(f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up...")
 
 
