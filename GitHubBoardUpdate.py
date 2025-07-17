@@ -2,27 +2,48 @@ import asyncio
 import logging
 from datetime import timedelta
 from logging import getLogger
+from typing import Optional
+
 import aiohttp
 import os
 from collections import defaultdict
 import discord
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.date import DateTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 from discord import Bot
 
 import WellKnown
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 logger = getLogger(__name__)
+update_bot: Optional[Bot] = None
 
 
-async def setup_github_board_update(bot: Bot):
-    bot.loop.create_task(run_periodic_update(bot))
+async def setup_github_board_update(bot: Bot, scheduler: AsyncIOScheduler):
+    global update_bot
+    update_bot = bot
+    # Round to next hour
+    next_hour = (discord.utils.utcnow().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1))
+
+    # Schedule first run at the top of the next hour
+    scheduler.add_job(
+        run_periodic_update,
+        trigger=DateTrigger(run_date=next_hour)
+    )
+
+    # Schedule recurring run every hour after that
+    scheduler.add_job(
+        run_periodic_update,
+        trigger=IntervalTrigger(hours=1, start_date=next_hour)
+    )
 
 
-async def run_periodic_update(bot: Bot):
+async def run_periodic_update():
     while True:
         try:
             logger.log(msg="Updating GitHub Board", level=logging.INFO)
-            await update_github_board(bot)
+            await update_github_board(update_bot)
         except Exception as e:
             logger.log(msg="Error in updating GitHub board: {e}", level=logging.ERROR)
         await asyncio.sleep(60 * 60)
@@ -30,7 +51,9 @@ async def run_periodic_update(bot: Bot):
 
 async def update_github_board(bot: Bot):
     status_issue_groups = await fetch_project_issues()
-    message_content = f"# GitHub Issue Board\nLast update: <t:{int(discord.utils.utcnow().timestamp())}:f>\nNext update: <t:{int((discord.utils.utcnow() + timedelta(hours=1)).timestamp())}:R>\n"
+    now = discord.utils.utcnow()
+    next_run = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    message_content = f"# GitHub Issue Board\nLast update: <t:{int(now.timestamp())}:f>\nNext update: <t:{int(next_run.timestamp())}:R>\n"
     for status, issues in status_issue_groups.items():
         if status not in [ "Backlog", "Urgent ToDo", "In progress", "Testing", ]:
             continue

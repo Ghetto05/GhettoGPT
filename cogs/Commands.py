@@ -2,6 +2,7 @@ from logging import getLogger, INFO
 import discord.ext
 from discord import Bot, slash_command
 from discord.commands import option
+import ChangelogUpdateNotifier
 from FakeIPGetter import generate_public_ipv4
 from ChangelogUpdate import run_changelog_update
 from GitHubBoardUpdate import update_github_board
@@ -39,6 +40,13 @@ class Commands(discord.Cog):
     async def update_github_board(self, ctx: discord.ApplicationContext):
         await ctx.respond("Updating GitHub issues...")
         await update_github_board(self.bot)
+        await ctx.respond("Done.")
+
+    @slash_command(name="update-github-board", description="Update the GitHub issue board", guild_ids=[954740284758032425])
+    async def test_changelog_update(self, ctx: discord.ApplicationContext):
+        await ctx.respond("Testing changelog update...")
+        await ChangelogUpdateNotifier.send_changelog_update(self.bot)
+        await ChangelogUpdateNotifier.send_weekly_changelog_summary(self.bot)
         await ctx.respond("Done.")
 
 

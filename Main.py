@@ -1,9 +1,11 @@
 import logging
 import os
 import discord
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord.ext import commands
 import WellKnown
 from ChangelogUpdate import setup_changelog_update_webhook
+from ChangelogUpdateNotifier import setup_changelog_summary_scheduler
 from GitHubBoardUpdate import setup_github_board_update
 from SpamBanner import check_and_ban_link_spammer
 
@@ -33,6 +35,9 @@ async def on_ready():
     global initialized
     if not initialized:
         initialized = True
+        scheduler = AsyncIOScheduler()
+        scheduler.start()
+        setup_changelog_summary_scheduler(bot, scheduler)
         await setup_changelog_update_webhook(bot)
         await setup_github_board_update(bot)
         await bot.get_channel(WellKnown.channel_bot_setup).send(f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up...")
