@@ -36,13 +36,11 @@ def setup_github_board_update(bot: Bot, scheduler: AsyncIOScheduler):
 
 
 async def run_periodic_update():
-    while True:
-        try:
-            logger.log(msg="Updating GitHub Board", level=logging.INFO)
-            await update_github_board(update_bot)
-        except Exception as e:
-            logger.log(msg="Error in updating GitHub board: {e}", level=logging.ERROR)
-        await asyncio.sleep(60 * 60)
+    try:
+        logger.log(msg="Updating GitHub Board", level=logging.INFO)
+        await update_github_board(update_bot)
+    except Exception as e:
+        logger.log(msg="Error in updating GitHub board: {e}", level=logging.ERROR)
 
 
 def get_next_interval():
