@@ -75,7 +75,9 @@ async def fetch_summary() -> str:
 
 
 async def fetch_added_lines():
-    since = (discord.utils.utcnow() - timedelta(hours=14)).isoformat() + "Z"
+    since_dt = discord.utils.utcnow() - timedelta(hours=14)
+    since_iso = since_dt.isoformat() + "Z"
+
     headers = {
         "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
@@ -85,42 +87,72 @@ async def fetch_added_lines():
     additions_by_file = defaultdict(list)
 
     async with aiohttp.ClientSession(headers=headers) as session:
-        # 1. Get list of files in Changelogs/
+        # 1. List all files in Changelogs folder (via contents API)
         async with session.get(f"{base_url}/contents/Changelogs") as resp:
             changelog_files = await resp.json()
 
-        for file in changelog_files:
-            filename = file["path"]
-            if not filename.endswith(".md"):
+        for entry in changelog_files:
+            if not entry["name"].endswith(".md"):
                 continue
 
-            # 2. Fetch current content
-            async with session.get(file["download_url"]) as resp:
-                current_text = await resp.text()
-            current_lines = set(l.strip() for l in current_text.splitlines() if l.strip())
+            filename = entry["path"]
 
-            # 3. Get commit from >= 7 days ago that modified this file
-            async with session.get(f"{base_url}/commits?path={filename}&until={since}") as resp:
-                old_commits = await resp.json()
+            # 2. Get all commits for this file (to find history)
+            async with session.get(f"{base_url}/commits?path={filename}&per_page=100") as resp:
+                all_commits = await resp.json()
 
-            if not old_commits:
-                # File was added within 7 days, keep all lines
-                additions_by_file[filename] = list(current_lines)
+            if not all_commits:
                 continue
 
-            # 4. Fetch old version of the file
-            old_sha = old_commits[0]["sha"]
-            async with session.get(f"{base_url}/contents/{filename}?ref={old_sha}") as resp:
-                old_file_data = await resp.json()
+            # 3. Check if file is new (created < 7 days ago)
+            creation_commit = all_commits[-1]
+            creation_date = creation_commit["commit"]["committer"]["date"]
+
+            if creation_date > since_iso:
+                # File is new — include entire content
+                async with session.get(f"{base_url}/contents/{filename}") as resp:
+                    file_data = await resp.json()
                 import base64
-                old_text = base64.b64decode(old_file_data["content"]).decode("utf-8")
-            old_lines = set(l.strip() for l in old_text.splitlines() if l.strip())
+                content = base64.b64decode(file_data["content"]).decode("utf-8")
+                lines = [line.strip() for line in content.splitlines() if line.strip()]
+                additions_by_file[filename].extend(lines)
+                continue
 
-            # 5. Diff: only lines that are new
-            new_lines = [line for line in current_text.splitlines()
-                         if line.strip() and line.strip() not in old_lines]
+            # 4. Filter commits in the past 7 days
+            recent_commits = [
+                c for c in all_commits
+                if c["commit"]["committer"]["date"] > since_iso
+            ]
+            if not recent_commits:
+                continue  # no relevant changes
 
-            if new_lines:
-                additions_by_file[filename] = new_lines
+            # 5. Get latest version of the file
+            async with session.get(f"{base_url}/contents/{filename}") as resp:
+                latest_data = await resp.json()
+            latest_content = base64.b64decode(latest_data["content"]).decode("utf-8")
+            latest_lines = [line.strip() for line in latest_content.splitlines() if line.strip()]
+
+            # 6. Get content from the most recent commit before or equal to 7 days ago
+            base_commit = None
+            for commit in reversed(all_commits):
+                if commit["commit"]["committer"]["date"] <= since_iso:
+                    base_commit = commit
+                    break
+
+            if not base_commit:
+                continue  # fail-safe
+
+            base_sha = base_commit["sha"]
+            async with session.get(f"{base_url}/contents/{filename}?ref={base_sha}") as resp:
+                base_data = await resp.json()
+            base_content = base64.b64decode(base_data["content"]).decode("utf-8")
+            base_lines = [line.strip() for line in base_content.splitlines() if line.strip()]
+
+            # 7. Compare lines and collect only additions
+            diff = difflib.ndiff(base_lines, latest_lines)
+            added = [line[2:].strip() for line in diff if line.startswith("+ ")]
+
+            if added:
+                additions_by_file[filename].extend(added)
 
     return additions_by_file
