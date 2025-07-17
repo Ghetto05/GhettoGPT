@@ -75,7 +75,7 @@ async def fetch_summary() -> str:
 
 
 async def fetch_added_lines():
-    since = (discord.utils.utcnow() - timedelta(hours=11, minutes=26)).isoformat() + "Z"
+    since = (discord.utils.utcnow() - timedelta(days=7)).isoformat() + "Z"
     headers = {
         "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
@@ -85,30 +85,42 @@ async def fetch_added_lines():
     additions_by_file = defaultdict(list)
 
     async with aiohttp.ClientSession(headers=headers) as session:
-        # 1. Get recent commits
-        async with session.get(f"{base_url}/commits?since={since}") as resp:
-            commits = await resp.json()
+        # 1. Get list of files in Changelogs/
+        async with session.get(f"{base_url}/contents/Changelogs") as resp:
+            changelog_files = await resp.json()
 
-        for commit in commits:
-            sha = commit["sha"]
+        for file in changelog_files:
+            filename = file["path"]
+            if not filename.endswith(".md"):
+                continue
 
-            # 2. Get commit details
-            async with session.get(f"{base_url}/commits/{sha}") as resp:
-                commit_data = await resp.json()
+            # 2. Fetch current content
+            async with session.get(file["download_url"]) as resp:
+                current_text = await resp.text()
+            current_lines = set(l.strip() for l in current_text.splitlines() if l.strip())
 
-            for file in commit_data.get("files", []):
-                filename = file["filename"]
+            # 3. Get commit from >= 7 days ago that modified this file
+            async with session.get(f"{base_url}/commits?path={filename}&until={since}") as resp:
+                old_commits = await resp.json()
 
-                if not (filename.startswith("Changelogs/") and filename.endswith(".md")):
-                    continue
+            if not old_commits:
+                # File was added within 7 days, keep all lines
+                additions_by_file[filename] = list(current_lines)
+                continue
 
-                patch = file.get("patch", "")
-                if not patch:
-                    continue
+            # 4. Fetch old version of the file
+            old_sha = old_commits[0]["sha"]
+            async with session.get(f"{base_url}/contents/{filename}?ref={old_sha}") as resp:
+                old_file_data = await resp.json()
+                import base64
+                old_text = base64.b64decode(old_file_data["content"]).decode("utf-8")
+            old_lines = set(l.strip() for l in old_text.splitlines() if l.strip())
 
-                # 3. Extract added lines
-                for line in patch.splitlines():
-                    if line.startswith("+") and not line.startswith("+++") and line.strip() != "+":
-                        additions_by_file[filename].append(line[1:].strip())
+            # 5. Diff: only lines that are new
+            new_lines = [line for line in current_text.splitlines()
+                         if line.strip() and line.strip() not in old_lines]
+
+            if new_lines:
+                additions_by_file[filename] = new_lines
 
     return additions_by_file
