@@ -1,3 +1,4 @@
+import logging
 from logging import getLogger
 from typing import Optional
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -25,6 +26,7 @@ def setup_changelog_summary_scheduler(bot: Bot, scheduler: AsyncIOScheduler):
 
 
 async def send_weekly_changelog_summary():
+    logger.log(msg="Sending weekly changelog summary", level=logging.INFO)
     channel = update_bot.get_channel(WellKnown.channel_weekly_changelog_update)
     mention = channel.guild.get_role(WellKnown.role_weekly_changelog_update).mention
     await channel.send(f"{mention} weekly changelog summary test")

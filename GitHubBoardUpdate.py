@@ -18,13 +18,14 @@ import WellKnown
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 logger = getLogger(__name__)
 update_bot: Optional[Bot] = None
+update_interval_minutes = 10
 
 
 def setup_github_board_update(bot: Bot, scheduler: AsyncIOScheduler):
     global update_bot
     update_bot = bot
     # Round to next hour
-    next_hour = (discord.utils.utcnow().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1))
+    next_hour = (discord.utils.utcnow().replace(minute=0, second=0, microsecond=0) + timedelta(minutes=update_interval_minutes))
 
     # Schedule first run at the top of the next hour
     scheduler.add_job(
@@ -35,7 +36,7 @@ def setup_github_board_update(bot: Bot, scheduler: AsyncIOScheduler):
     # Schedule recurring run every hour after that
     scheduler.add_job(
         run_periodic_update,
-        trigger=IntervalTrigger(hours=1, start_date=next_hour)
+        trigger=IntervalTrigger(minutes=update_interval_minutes, start_date=next_hour)
     )
 
 
@@ -52,7 +53,7 @@ async def run_periodic_update():
 async def update_github_board(bot: Bot):
     status_issue_groups = await fetch_project_issues()
     now = discord.utils.utcnow()
-    next_run = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    next_run = now.replace(minute=0, second=0, microsecond=0) + timedelta(minutes=update_interval_minutes)
     message_content = f"# GitHub Issue Board\nLast update: <t:{int(now.timestamp())}:f>\nNext update: <t:{int(next_run.timestamp())}:R>\n"
     for status, issues in status_issue_groups.items():
         if status not in [ "Backlog", "Urgent ToDo", "In progress", "Testing", ]:
