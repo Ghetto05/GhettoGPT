@@ -42,7 +42,7 @@ class Commands(discord.Cog):
         await update_github_board(self.bot)
         await ctx.respond("Done.")
 
-    @slash_command(name="test-weekly-changelog-notification", description="Sends a test message to the weekly changelog update channel", guild_ids=[954740284758032425])
+    @slash_command(name="test-weekly-changelog", description="Sends a test message to the weekly changelog update channel", guild_ids=[954740284758032425])
     async def test_weekly_changelog_update(self, ctx: discord.ApplicationContext):
         await ctx.respond("Testing changelog update...")
         await ChangelogUpdateNotifier.send_weekly_changelog_summary()
