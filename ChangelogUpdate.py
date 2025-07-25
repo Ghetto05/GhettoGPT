@@ -60,9 +60,9 @@ async def run_changelog_webhook_update():
         logger.log(msg="Changelog update already running", level=ERROR)
         return
     webhook_update_running = True
-    await webhook_output_channel.send(f"Changelog update triggered by webhook")
+    logger.info(f"Changelog update triggered by webhook")
     await run_changelog_update(webhook_bot, False)
-    await webhook_output_channel.send(f"Changelog update done")
+    logger.info(f"Changelog update done")
     webhook_update_running = False
 
 
