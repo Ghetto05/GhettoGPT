@@ -18,7 +18,7 @@ async def check_and_ban_link_spammer(message: discord.Message, bot: discord.Bot)
     if message.author.bot or not message.guild:
         return
 
-    if not LINK_REGEX.search(message.content):
+    if not (LINK_REGEX.search(message.content) or "discordapp.com/invite/" in message.content):
         return
 
     logger.log(msg=f"Found message with link", level=INFO)
