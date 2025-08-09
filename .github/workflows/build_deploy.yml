@@ -43,4 +43,5 @@ jobs:
     - name: Call Portainer webhook to trigger deploy
       if: success()
       run: |
-        curl -X POST https://portainer.ghetto05.com/api/stacks/webhooks/1272d1df-5736-4fa2-b0d8-70e6e588ad86
+        curl -X POST https://portainer.ghetto05.com/api/stacks/webhooks/1272d1df-5736-4fa2-b0d8-70e6e588ad86 # prod instance
+        curl -X POST https://portainer.ghetto05.com/api/stacks/webhooks/bb5093a0-2769-4ed4-a4de-bfc3d4d63c8f # dev instance
