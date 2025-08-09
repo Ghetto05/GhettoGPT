@@ -2,8 +2,6 @@ name: Build and Deploy
 
 on:
   push:
-    branches:
-      - master
   workflow_dispatch:
 
 env:
@@ -33,7 +31,6 @@ jobs:
       run: |
         VERSION_TAG=build-${{ github.run_number }}
         echo "Version tag: $VERSION_TAG"
-
         docker build \
           -t $IMAGE_NAME:$VERSION_TAG -t $IMAGE_NAME:latest .
         
@@ -41,7 +38,11 @@ jobs:
         docker push $IMAGE_NAME:latest
 
     - name: Call Portainer webhook to trigger deploy
-      if: success()
+      if: success() && github.ref == 'refs/heads/master'
       run: |
-        curl -X POST https://portainer.ghetto05.com/api/stacks/webhooks/1272d1df-5736-4fa2-b0d8-70e6e588ad86 # prod instance
-        curl -X POST https://portainer.ghetto05.com/api/stacks/webhooks/bb5093a0-2769-4ed4-a4de-bfc3d4d63c8f # dev instance
+        curl -X POST https://portainer.ghetto05.com/api/stacks/webhooks/something # prod instance
+
+    - name: Call Portainer webhook to trigger dev deploy
+      if: success() && github.ref != 'refs/heads/master'
+      run: |
+        curl -X POST https://portainer.ghetto05.com/api/stacks/webhooks/somethingelse # dev instance
