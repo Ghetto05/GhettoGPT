@@ -36,11 +36,12 @@ async def on_ready():
     global initialized
     if not initialized:
         initialized = True
-        scheduler = AsyncIOScheduler()
-        scheduler.start()
-        setup_changelog_summary_scheduler(bot, scheduler)
-        setup_github_board_update(bot, scheduler)
-        await setup_changelog_update_webhook(bot)
+        if not is_dev:
+            scheduler = AsyncIOScheduler()
+            scheduler.start()
+            setup_changelog_summary_scheduler(bot, scheduler)
+            setup_github_board_update(bot, scheduler)
+            await setup_changelog_update_webhook(bot)
         await bot.get_channel(WellKnown.get_channel(WellKnown.channel_bot_setup)).send(f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up...{' (test instance)' if is_dev else ''}")
 
 
@@ -50,7 +51,8 @@ async def on_message(message: discord.Message):
     if message.author.bot:
         return
 
-    await check_and_ban_link_spammer(message, bot)
+    if not is_dev:
+        await check_and_ban_link_spammer(message, bot)
 
     await bot.process_commands(message)
 
