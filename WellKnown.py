@@ -18,4 +18,4 @@ message_github_board = 1395180150764867758
 def get_channel(channel_supplier):
     if is_dev:
         return channel_bot_tests
-    return channel_supplier()
+    return channel_supplier
