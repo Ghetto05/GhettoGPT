@@ -1,4 +1,7 @@
+from Main import is_dev
+
 channel_bot_setup = 991787747977220257
+channel_bot_tests = 1403793063330975774
 channel_moderators = 954746778006216774
 channel_github_board = 1395175095630041221
 channel_changelog_update = 1395314696772653056
@@ -11,3 +14,8 @@ role_changelog_update = 1395315680622149642
 role_weekly_changelog_update = 1395315806383902730
 
 message_github_board = 1395180150764867758
+
+def get_channel(channel_supplier):
+    if is_dev:
+        return channel_bot_tests
+    return channel_supplier()

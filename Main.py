@@ -20,6 +20,7 @@ intents.presences = True
 
 bot = commands.Bot(intents=intents)
 logger = logging.getLogger(__name__)
+is_dev = os.environ.get("ENV") == "dev"
 
 extensions = ("cogs.Commands", "cogs.RandomPrebuilt",)
 
@@ -40,7 +41,7 @@ async def on_ready():
         setup_changelog_summary_scheduler(bot, scheduler)
         setup_github_board_update(bot, scheduler)
         await setup_changelog_update_webhook(bot)
-        await bot.get_channel(WellKnown.channel_bot_setup).send(f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up...")
+        await bot.get_channel(WellKnown.get_channel(WellKnown.channel_bot_setup)).send(f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up...{" (test instance)" if is_dev else ""}")
 
 
 @bot.event
