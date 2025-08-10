@@ -32,6 +32,8 @@ webhook_update_running = False
 async def setup_changelog_update_webhook(bot: discord.Bot):
     global flask_started, webhook_output_channel, webhook_bot
 
+    logger.info("Setting up changelog update webhook")
+
     webhook_output_channel = bot.get_channel(WellKnown.channel_bot_setup)
     webhook_bot = bot
 
@@ -46,6 +48,7 @@ def run_flask():
 
 @app.route('/webhooks/discord-bot/changelog-update', methods=['POST'])
 def changelog_webhook():
+    logger.info("Changing log update webhook triggered")
     if webhook_output_channel:
         asyncio.run_coroutine_threadsafe(
             run_changelog_webhook_update(),
