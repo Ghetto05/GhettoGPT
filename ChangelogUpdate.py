@@ -1,6 +1,13 @@
+import difflib
+import logging
+import pathlib
 import threading
 from typing import Optional
 
+import aiofiles
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+from discord import Bot
 from flask import Flask, request
 import asyncio
 from logging import getLogger, ERROR, INFO
@@ -11,9 +18,7 @@ import base64
 import re
 import os
 from packaging.version import parse as parse_version
-
 import WellKnown
-from ChangelogUpdateNotifier import send_changelog_update_notification
 
 TAG_REPO = "Ghetto05/Mods"
 FILE_REPO = "Ghetto05/GhettosModding"
@@ -106,7 +111,7 @@ async def check_tag_exists(session, tag_name):
 
 
 async def write_message_id_file(session, mod_slug, msg_id):
-    path = f"Changelogs/{mod_slug}_MessageID.txt"
+    path = f"Changelogs/MetaData/{mod_slug}_MessageID.txt"
     url = f"{API_URL.format(FILE_REPO)}/contents/{path}"
     content = str(msg_id).encode("utf-8")
     encoded = base64.b64encode(content).decode()
@@ -171,7 +176,7 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
         logger.log(msg=f"Channel {channel_id} not found.", level=ERROR)
         return
 
-    msg_id_file = f"Changelogs/{mod_slug}_MessageID.txt"
+    msg_id_file = f"Changelogs/MetaData/{mod_slug}_MessageID.txt"
     msg_id_raw = await fetch_raw_file(session, msg_id_file)
     msg_id = int(msg_id_raw.strip()) if msg_id_raw and msg_id_raw.strip().isdigit() else None
 
@@ -190,3 +195,81 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
 
     except Exception as e:
         logger.log(msg=f"Error posting embed for {mod_slug}: {e}", level=ERROR)
+
+async def send_changelog_update_notification(bot: Bot, file: str, old_content: str, new_content: str):
+    old_lines = old_content.splitlines()
+    new_lines = new_content.splitlines()
+
+    matcher = difflib.SequenceMatcher(None, old_lines, new_lines)
+    additions = []
+
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "insert" or tag == "replace":
+            additions.extend(new_lines[j1:j2])
+
+    if len(additions) == 0:
+        return
+
+    channel = bot.get_channel(WellKnown.channel_changelog_update)
+    mention = channel.guild.get_role(WellKnown.role_changelog_update).mention
+    await channel.send(f"{mention}\nUpdate to\n**{file}**\n" + "\n".join(additions))
+
+    # New: Append to queued weekly update file
+    # Extract mod_name from file format "ModName_Version.md"
+    base_name = pathlib.Path(file).stem  # e.g. "ModName_Version"
+    mod_name = base_name.split('_', 1)[0]  # take "ModName" part before first underscore
+
+    queued_dir = pathlib.Path("Changelogs/MetaData")
+    queued_dir.mkdir(parents=True, exist_ok=True)
+    queued_file = queued_dir / f"{mod_name}_QueuedWeeklyUpdate.md"
+
+    # Prepare text to append (add heading if file does not exist yet)
+    if not queued_file.exists():
+        to_write = f"## {mod_name}\n"
+    else:
+        to_write = "\n"
+
+    to_write += "\n".join(additions) + "\n"
+
+    import aiofiles
+    async with aiofiles.open(queued_file, mode="a", encoding="utf-8") as f:
+        await f.write(to_write)
+
+def setup_changelog_summary_scheduler(bot: Bot, scheduler: AsyncIOScheduler):
+    global update_bot
+    update_bot = bot
+    scheduler.add_job(
+        send_weekly_changelog_summary,
+        CronTrigger(day_of_week='fri', hour=12, minute=0, timezone='UTC')
+    )
+
+async def send_weekly_changelog_summary():
+    logger.log(msg="Sending weekly changelog summary", level=logging.INFO)
+    channel = update_bot.get_channel(WellKnown.channel_weekly_changelog_update)
+    mention = channel.guild.get_role(WellKnown.role_weekly_changelog_update).mention
+    changes = await fetch_summary()
+    message = "There were no changes this week."
+    if changes != "None":
+        message = f"The following changes were added in the past week:\n\n{changes}\n-# **NOTE:**\n-# Changes that were previously added may have been removed.\n-# This summary only shows additions since the last week\n-# If you want to see all changes, please check the respective changelog channel."
+    await channel.send(content=f"{mention}", embed=discord.Embed(description=message[:4096], color=0xFF4F00))
+
+async def fetch_summary() -> str:
+    import pathlib
+    queued_dir = pathlib.Path("Changelogs/MetaData")
+    if not queued_dir.exists():
+        return "None"
+    output = ""
+    files = list(queued_dir.glob("*_QueuedWeeklyUpdate.md"))
+    if not files:
+        return "None"
+
+    for queued_file in files:
+        # Read contents
+        async with aiofiles.open(queued_file, mode="r", encoding="utf-8") as f:
+            content = await f.read()
+        output += content + "\n"
+
+        # Delete file after reading
+        await aiofiles.os.remove(queued_file)
+
+    return output if output.strip() else "None"
