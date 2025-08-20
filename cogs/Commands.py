@@ -2,9 +2,8 @@ from logging import getLogger, INFO
 import discord.ext
 from discord import Bot, slash_command
 from discord.commands import option
-import ChangelogUpdateNotifier
 from FakeIPGetter import generate_public_ipv4
-from ChangelogUpdate import run_changelog_update
+from ChangelogUpdate import run_changelog_update, weekly_changelog_update
 from GitHubBoardUpdate import update_github_board
 
 logger = getLogger(__name__)
@@ -45,7 +44,7 @@ class Commands(discord.Cog):
     @slash_command(name="test-weekly-changelog", description="Sends a test message to the weekly changelog update channel", guild_ids=[954740284758032425])
     async def test_weekly_changelog_update(self, ctx: discord.ApplicationContext):
         await ctx.respond("Testing changelog update...")
-        await ChangelogUpdateNotifier.weekly_changelog_update()
+        await weekly_changelog_update()
         await ctx.respond("Done.")
 
 
