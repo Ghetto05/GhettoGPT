@@ -19,8 +19,6 @@ import os
 import pathlib
 import re
 import threading
-
-import Main
 import WellKnown
 
 TAG_REPO = "Ghetto05/Mods"
