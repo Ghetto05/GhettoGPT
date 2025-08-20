@@ -1,23 +1,26 @@
-import difflib
-import logging
-import pathlib
-import threading
-from typing import Optional
-
-import aiofiles
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from discord import Bot
 from flask import Flask, request
-import asyncio
-from logging import getLogger, ERROR, INFO
+from logging import ERROR, INFO, getLogger
+from packaging.version import parse as parse_version
+from typing import Optional
+
+import aiofiles
+import aiofiles.os
 import aiohttp
+import asyncio
+import base64
+import difflib
 import discord
 import discord.ext
-import base64
-import re
+import logging
 import os
-from packaging.version import parse as parse_version
+import pathlib
+import re
+import threading
+
+import Main
 import WellKnown
 
 TAG_REPO = "Ghetto05/Mods"
@@ -34,6 +37,9 @@ webhook_bot: Optional[discord.Bot] = None
 webhook_update_running = False
 
 
+#region Webhook setup
+
+
 async def setup_changelog_update_webhook(bot: discord.Bot):
     global flask_started, webhook_output_channel, webhook_bot
 
@@ -47,6 +53,13 @@ async def setup_changelog_update_webhook(bot: discord.Bot):
         flask_started = True
 
 
+def setup_changelog_summary_scheduler(scheduler: AsyncIOScheduler):
+    scheduler.add_job(
+        weekly_changelog_update,
+        CronTrigger(day_of_week='fri', hour=12, minute=0, timezone='UTC')
+    )
+
+
 def run_flask():
     app.run(host="0.0.0.0", port=5000)
 
@@ -56,13 +69,16 @@ def changelog_webhook():
     logger.info("Changing log update webhook triggered")
     if webhook_output_channel:
         asyncio.run_coroutine_threadsafe(
-            run_changelog_webhook_update(),
+            changelog_update(),
             webhook_bot.loop
         )
     return '', 204
 
 
-async def run_changelog_webhook_update():
+#endregion
+
+
+async def changelog_update():
     global webhook_update_running
     if webhook_update_running:
         logger.log(msg="Changelog update already running", level=ERROR)
@@ -90,6 +106,9 @@ async def run_changelog_update(bot: discord.Bot, all_versions: bool):
                 await asyncio.sleep(1)
 
 
+#region GitHub utils
+
+
 async def fetch_raw_file(session, path) -> str:
     url = f"{BASE_URL}/{path}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3.raw"}
@@ -108,26 +127,6 @@ async def check_tag_exists(session, tag_name):
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
     async with session.get(url, headers=headers) as resp:
         return resp.status == 200
-
-
-async def write_message_id_file(session, mod_slug, msg_id):
-    path = f"Changelogs/MetaData/{mod_slug}_MessageID.txt"
-    url = f"{API_URL.format(FILE_REPO)}/contents/{path}"
-    content = str(msg_id).encode("utf-8")
-    encoded = base64.b64encode(content).decode()
-
-    async with session.get(url, headers={"Authorization": f"token {GITHUB_TOKEN}"}) as resp:
-        sha = (await resp.json()).get("sha") if resp.status == 200 else None
-
-    payload = {
-        "message": f"Update MessageID for {mod_slug}",
-        "content": encoded,
-        "branch": FILE_BRANCH,
-        **({"sha": sha} if sha else {})
-    }
-
-    async with session.put(url, headers={"Authorization": f"token {GITHUB_TOKEN}"}, json=payload) as resp:
-        return resp.status in (200, 201)
 
 
 async def get_mappings(session, file_path):
@@ -154,6 +153,29 @@ async def get_all_changelog_versions(session, mod):
             for f in files if
             f["name"].startswith(f"{mod}_") and f["name"].endswith(".md") and "_MessageID" not in f["name"]
         ]
+
+
+#endregion
+
+
+async def write_message_id_file(session, mod_slug, msg_id):
+    path = f"Changelogs/MetaData/{mod_slug}_MessageID.txt"
+    url = f"{API_URL.format(FILE_REPO)}/contents/{path}"
+    content = str(msg_id).encode("utf-8")
+    encoded = base64.b64encode(content).decode()
+
+    async with session.get(url, headers={"Authorization": f"token {GITHUB_TOKEN}"}) as resp:
+        sha = (await resp.json()).get("sha") if resp.status == 200 else None
+
+    payload = {
+        "message": f"Update MessageID for {mod_slug}",
+        "content": encoded,
+        "branch": FILE_BRANCH,
+        **({"sha": sha} if sha else {})
+    }
+
+    async with session.put(url, headers={"Authorization": f"token {GITHUB_TOKEN}"}, json=payload) as resp:
+        return resp.status in (200, 201)
 
 
 async def process_changelog(session, bot: discord.Bot, mod, version, channel_id):
@@ -196,6 +218,7 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
     except Exception as e:
         logger.log(msg=f"Error posting embed for {mod_slug}: {e}", level=ERROR)
 
+
 async def send_changelog_update_notification(bot: Bot, file: str, old_content: str, new_content: str):
     old_lines = old_content.splitlines()
     new_lines = new_content.splitlines()
@@ -210,7 +233,7 @@ async def send_changelog_update_notification(bot: Bot, file: str, old_content: s
     if len(additions) == 0:
         return
 
-    channel = bot.get_channel(WellKnown.channel_changelog_update)
+    channel = bot.get_channel(WellKnown.get_channel(WellKnown.channel_changelog_update))
     mention = channel.guild.get_role(WellKnown.role_changelog_update).mention
     await channel.send(f"{mention}\nUpdate to\n**{file}**\n" + "\n".join(additions))
 
@@ -219,7 +242,7 @@ async def send_changelog_update_notification(bot: Bot, file: str, old_content: s
     base_name = pathlib.Path(file).stem  # e.g. "ModName_Version"
     mod_name = base_name.split('_', 1)[0]  # take "ModName" part before first underscore
 
-    queued_dir = pathlib.Path("Changelogs/MetaData")
+    queued_dir = pathlib.Path("Changelogs")
     queued_dir.mkdir(parents=True, exist_ok=True)
     queued_file = queued_dir / f"{mod_name}_QueuedWeeklyUpdate.md"
 
@@ -235,17 +258,10 @@ async def send_changelog_update_notification(bot: Bot, file: str, old_content: s
     async with aiofiles.open(queued_file, mode="a", encoding="utf-8") as f:
         await f.write(to_write)
 
-def setup_changelog_summary_scheduler(bot: Bot, scheduler: AsyncIOScheduler):
-    global update_bot
-    update_bot = bot
-    scheduler.add_job(
-        send_weekly_changelog_summary,
-        CronTrigger(day_of_week='fri', hour=12, minute=0, timezone='UTC')
-    )
 
-async def send_weekly_changelog_summary():
+async def weekly_changelog_update():
     logger.log(msg="Sending weekly changelog summary", level=logging.INFO)
-    channel = update_bot.get_channel(WellKnown.channel_weekly_changelog_update)
+    channel = webhook_bot.get_channel(WellKnown.get_channel(WellKnown.channel_weekly_changelog_update))
     mention = channel.guild.get_role(WellKnown.role_weekly_changelog_update).mention
     changes = await fetch_summary()
     message = "There were no changes this week."
@@ -253,9 +269,10 @@ async def send_weekly_changelog_summary():
         message = f"The following changes were added in the past week:\n\n{changes}\n-# **NOTE:**\n-# Changes that were previously added may have been removed.\n-# This summary only shows additions since the last week\n-# If you want to see all changes, please check the respective changelog channel."
     await channel.send(content=f"{mention}", embed=discord.Embed(description=message[:4096], color=0xFF4F00))
 
+
 async def fetch_summary() -> str:
     import pathlib
-    queued_dir = pathlib.Path("Changelogs/MetaData")
+    queued_dir = pathlib.Path("Changelogs")
     if not queued_dir.exists():
         return "None"
     output = ""

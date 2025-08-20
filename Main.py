@@ -1,13 +1,13 @@
-import logging
-import os
-import discord
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from ChangelogUpdate import setup_changelog_update_webhook, setup_changelog_summary_scheduler
 from discord.ext import commands
-import WellKnown
-from ChangelogUpdate import setup_changelog_update_webhook
-from ChangelogUpdateNotifier import setup_changelog_summary_scheduler
 from GitHubBoardUpdate import setup_github_board_update
 from SpamBanner import check_and_ban_link_spammer
+
+import discord
+import logging
+import os
+import WellKnown
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
@@ -39,7 +39,7 @@ async def on_ready():
         if not is_dev:
             scheduler = AsyncIOScheduler()
             scheduler.start()
-            setup_changelog_summary_scheduler(bot, scheduler)
+            setup_changelog_summary_scheduler(scheduler)
             setup_github_board_update(bot, scheduler)
             await setup_changelog_update_webhook(bot)
         await bot.get_channel(WellKnown.get_channel(WellKnown.channel_bot_setup)).send(f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up...{' (test instance)' if is_dev else ''}")
