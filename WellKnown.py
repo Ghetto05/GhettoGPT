@@ -1,4 +1,4 @@
-from Main import is_dev
+from os import environ
 
 channel_bot_setup = 991787747977220257
 channel_bot_tests = 1403793063330975774
@@ -14,6 +14,8 @@ role_changelog_update = 1395315680622149642
 role_weekly_changelog_update = 1395315806383902730
 
 message_github_board = 1395180150764867758
+
+is_dev = environ.get("ENV") == "dev"
 
 def get_channel(channel_supplier):
     if is_dev:
