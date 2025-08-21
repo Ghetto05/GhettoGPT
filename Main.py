@@ -29,7 +29,7 @@ for extension in extensions:
     bot.load_extension(extension)
 
 if is_dev:
-    extensions = ("cogs.DevCommands",)
+    bot.load_extension("cogs.DevCommands")
 
 
 @bot.event
