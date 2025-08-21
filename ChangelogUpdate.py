@@ -212,11 +212,11 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
             original_msg = await channel.fetch_message(msg_id)
             original_changelog = original_msg.embeds[0].description
             await original_msg.edit(content=None, embed=embed)
-            await enqueue_changelog_change(mod, original_changelog, changelog.strip())
+            await enqueue_changelog_change(mod_slug, original_changelog, changelog.strip())
         else:
             msg = await channel.send(embed=embed)
             await write_message_id_file(session, mod_slug, msg.id)
-            await enqueue_changelog_change(mod, "", changelog.strip())
+            await enqueue_changelog_change(mod_slug, "", changelog.strip())
 
         logger.log(msg=f"Updated embed for {mod_slug} ({len(changelog.strip())} chars)", level=INFO)
 
@@ -224,9 +224,11 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
         logger.log(msg=f"Error posting embed for {mod_slug}: {e}", level=ERROR)
 
 
-async def enqueue_changelog_change(mod_name: str, old_content: str, new_content: str):
+async def enqueue_changelog_change(mod_slug: str, old_content: str, new_content: str):
     old_lines = old_content.splitlines()
     new_lines = new_content.splitlines()
+
+    mod_name = mod_slug.split('_', 1)[0]
 
     matcher = difflib.SequenceMatcher(None, old_lines, new_lines)
     additions = []
