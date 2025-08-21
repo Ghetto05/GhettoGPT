@@ -64,7 +64,7 @@ class DevCommands(discord.Cog):
             await ctx.respond("This is a test command and must not be used in production!")
             return
         await ctx.respond(f"Enqueuing changes to current changelog update for mod {mod}...")
-        await enqueue_changelog_change(mod, "", changes)
+        await enqueue_changelog_change(mod, "", changes.replace("\\n", "\n"))
         await ctx.send_followup("Done.")
 
 

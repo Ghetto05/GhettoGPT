@@ -249,7 +249,11 @@ async def enqueue_changelog_change(mod_slug: str, old_content: str, new_content:
 async def send_enqueued_changelog_update(bot: Bot):
     channel = bot.get_channel(WellKnown.get_channel(WellKnown.channel_changelog_update))
     mention = channel.guild.get_role(WellKnown.role_changelog_update).mention
-    await channel.send(f"{mention}\n")
+    output = ""
+    for key, values in changelog_update_queue.items():
+        lines = "\n".join(values)
+        output += f"\n\n## Update to {key}:\n{lines}" #ToDo: use proper mod name and version
+    await channel.send(f"{mention}{output}")
 
 
 async def append_changelog_to_weekly_queue(mod_name: str, additions: [str]): # take "ModName" part before first underscore
@@ -259,7 +263,7 @@ async def append_changelog_to_weekly_queue(mod_name: str, additions: [str]): # t
 
     # Prepare text to append (add heading if file does not exist yet)
     if not queued_file.exists():
-        to_write = f"## {mod_name}\n"
+        to_write = f"## {mod_name}\n" #ToDo: use actual mod name and version
     else:
         to_write = "\n"
 
