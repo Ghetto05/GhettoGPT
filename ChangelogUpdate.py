@@ -243,7 +243,7 @@ async def send_changelog_update_notification(bot: Bot, file: str, old_content: s
     await append_changelog_to_weekly_queue(file, additions)
 
 
-async def append_changelog_to_weekly_queue(file: str, additions: []):
+async def append_changelog_to_weekly_queue(file: str, additions: [str]):
     # Extract mod_name from file format "ModName_Version.md"
     base_name = pathlib.Path(file).stem  # e.g. "ModName_Version"
     mod_name = base_name.split('_', 1)[0]  # take "ModName" part before first underscore

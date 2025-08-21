@@ -32,7 +32,7 @@ class Commands(discord.Cog):
             return
         await ctx.respond("Updating changelogs...")
         await run_changelog_update(self.bot, all_versions)
-        await ctx.respond("Done.")
+        await ctx.send_followup("Done.")
 
 
     @slash_command(name="grabip", description="Grab the IP of a specific user", guild_ids=[954740284758032425])
@@ -50,7 +50,7 @@ class Commands(discord.Cog):
     async def update_github_board(self, ctx: discord.ApplicationContext):
         await ctx.respond("Updating GitHub issues...")
         await update_github_board(self.bot)
-        await ctx.respond("Done.")
+        await ctx.send_followup("Done.")
 
 
     @slash_command(name="test-weekly-changelog", description="[Test] Sends a test message to the weekly changelog update channel", guild_ids=[954740284758032425])
@@ -60,7 +60,7 @@ class Commands(discord.Cog):
             return
         await ctx.respond("Testing changelog update...")
         await weekly_changelog_update()
-        await ctx.respond("Done.")
+        await ctx.send_followup("Done.")
 
 
     @slash_command(name="clear-weekly-changelog", description="[Test] Clears the weekly changelog update queue", guild_ids=[954740284758032425])
@@ -70,7 +70,7 @@ class Commands(discord.Cog):
             return
         await ctx.respond("Clearing weekly changelog cache...")
         await fetch_summary()
-        await ctx.respond("Done.")
+        await ctx.send_followup("Done.")
 
 
     @slash_command(name="append-weekly-changelog", description="[Test] Appends content to the weekly changelog update queue", guild_ids=[954740284758032425])
@@ -82,17 +82,18 @@ class Commands(discord.Cog):
     )
     @option(
         "changes",
-        description="The changes that should be appended",
-        input_type=[],
+        description="The changes that should be appended (separated by |)",
+        input_type=str,
         required=True
     )
-    async def test_weekly_changelog_update(self, ctx: discord.ApplicationContext, mod: str, changes: []):
+    async def test_weekly_changelog_update(self, ctx: discord.ApplicationContext, mod: str, changes: str):
         if not is_dev:
             await ctx.respond("This is a test command and must not be used in production!")
             return
-        await ctx.respond(f"Appending {count(changes)} changes to weekly changelog cache of mod {mod}...")
-        await append_changelog_to_weekly_queue(mod, changes)
-        await ctx.respond("Done.")
+        change_collection = changes.split("|")
+        await ctx.respond(f"Appending {len(change_collection)} changes to weekly changelog cache of mod {mod}...")
+        await append_changelog_to_weekly_queue(mod, change_collection)
+        await ctx.send_followup("Done.")
 
 
 def setup(bot: Bot):
