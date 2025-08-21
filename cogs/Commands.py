@@ -1,14 +1,17 @@
-from itertools import count
-from logging import getLogger, INFO
+from ChangelogUpdate import (
+    append_changelog_to_weekly_queue,
+    fetch_summary,
+    run_changelog_update,
+    weekly_changelog_update,
+)
+from FakeIPGetter import generate_public_ipv4
+from GitHubBoardUpdate import update_github_board
+from discord import Bot, slash_command
+from discord.commands import option
+from logging import INFO, getLogger
 from os import environ
 
 import discord.ext
-from discord import Bot, slash_command
-from discord.commands import option
-from FakeIPGetter import generate_public_ipv4
-from ChangelogUpdate import run_changelog_update, weekly_changelog_update, fetch_summary, \
-    append_changelog_to_weekly_queue
-from GitHubBoardUpdate import update_github_board
 
 logger = getLogger(__name__)
 is_dev = environ.get("ENV") == "dev"
@@ -54,7 +57,7 @@ class Commands(discord.Cog):
 
 
     @slash_command(name="test-weekly-changelog", description="[Test] Sends a test message to the weekly changelog update channel", guild_ids=[954740284758032425])
-    async def test_weekly_changelog_update(self, ctx: discord.ApplicationContext):
+    async def test_weekly_changelog(self, ctx: discord.ApplicationContext):
         if not is_dev:
             await ctx.respond("This is a test command and must not be used in production!")
             return
@@ -64,7 +67,7 @@ class Commands(discord.Cog):
 
 
     @slash_command(name="clear-weekly-changelog", description="[Test] Clears the weekly changelog update queue", guild_ids=[954740284758032425])
-    async def test_weekly_changelog_update(self, ctx: discord.ApplicationContext):
+    async def clear_weekly_changelog(self, ctx: discord.ApplicationContext):
         if not is_dev:
             await ctx.respond("This is a test command and must not be used in production!")
             return
@@ -86,7 +89,7 @@ class Commands(discord.Cog):
         input_type=str,
         required=True
     )
-    async def test_weekly_changelog_update(self, ctx: discord.ApplicationContext, mod: str, changes: str):
+    async def append_weekly_changelog(self, ctx: discord.ApplicationContext, mod: str, changes: str):
         if not is_dev:
             await ctx.respond("This is a test command and must not be used in production!")
             return
