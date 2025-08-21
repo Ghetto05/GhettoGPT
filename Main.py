@@ -28,6 +28,9 @@ extensions = ("cogs.Commands", "cogs.RandomPrebuilt",)
 for extension in extensions:
     bot.load_extension(extension)
 
+if is_dev:
+    extensions = ("cogs.DevCommands",)
+
 
 @bot.event
 async def on_ready():

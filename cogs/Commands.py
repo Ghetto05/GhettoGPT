@@ -2,7 +2,7 @@ from ChangelogUpdate import (
     append_changelog_to_weekly_queue,
     fetch_summary,
     run_changelog_update,
-    weekly_changelog_update,
+    weekly_changelog_update, send_enqueued_changelog_update, enqueue_changelog_change,
 )
 from FakeIPGetter import generate_public_ipv4
 from GitHubBoardUpdate import update_github_board
@@ -22,22 +22,6 @@ class Commands(discord.Cog):
         self.bot = bot
 
 
-    @slash_command(name="update-changelog", description="[Test] Update the changelogs", guild_ids=[954740284758032425])
-    @option(
-        "all_versions",
-        description="Update all changelogs",
-        input_type=bool,
-        required=True
-    )
-    async def update_changelogs(self, ctx: discord.ApplicationContext, all_versions: bool):
-        if not is_dev:
-            await ctx.respond("This is a test command and must not be used in production!")
-            return
-        await ctx.respond("Updating changelogs...")
-        await run_changelog_update(self.bot, all_versions)
-        await ctx.send_followup("Done.")
-
-
     @slash_command(name="grabip", description="Grab the IP of a specific user", guild_ids=[954740284758032425])
     @option(
         "user",
@@ -53,49 +37,6 @@ class Commands(discord.Cog):
     async def update_github_board(self, ctx: discord.ApplicationContext):
         await ctx.respond("Updating GitHub issues...")
         await update_github_board(self.bot)
-        await ctx.send_followup("Done.")
-
-
-    @slash_command(name="test-weekly-changelog", description="[Test] Sends a test message to the weekly changelog update channel", guild_ids=[954740284758032425])
-    async def test_weekly_changelog(self, ctx: discord.ApplicationContext):
-        if not is_dev:
-            await ctx.respond("This is a test command and must not be used in production!")
-            return
-        await ctx.respond("Testing changelog update...")
-        await weekly_changelog_update()
-        await ctx.send_followup("Done.")
-
-
-    @slash_command(name="clear-weekly-changelog", description="[Test] Clears the weekly changelog update queue", guild_ids=[954740284758032425])
-    async def clear_weekly_changelog(self, ctx: discord.ApplicationContext):
-        if not is_dev:
-            await ctx.respond("This is a test command and must not be used in production!")
-            return
-        await ctx.respond("Clearing weekly changelog cache...")
-        await fetch_summary()
-        await ctx.send_followup("Done.")
-
-
-    @slash_command(name="append-weekly-changelog", description="[Test] Appends content to the weekly changelog update queue", guild_ids=[954740284758032425])
-    @option(
-        "mod",
-        description="The mod which should be appended to",
-        input_type=str,
-        required=True
-    )
-    @option(
-        "changes",
-        description="The changes that should be appended (separated by |)",
-        input_type=str,
-        required=True
-    )
-    async def append_weekly_changelog(self, ctx: discord.ApplicationContext, mod: str, changes: str):
-        if not is_dev:
-            await ctx.respond("This is a test command and must not be used in production!")
-            return
-        change_collection = changes.split("|")
-        await ctx.respond(f"Appending {len(change_collection)} changes to weekly changelog cache of mod {mod}...")
-        await append_changelog_to_weekly_queue(mod, change_collection)
         await ctx.send_followup("Done.")
 
 

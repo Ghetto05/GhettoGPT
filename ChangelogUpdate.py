@@ -33,6 +33,7 @@ webhook_output_channel: Optional[discord.channel] = None
 flask_started = False
 webhook_bot: Optional[discord.Bot] = None
 webhook_update_running = False
+changelog_update_queue: dict[str, list[str]] = {}
 
 
 def setup(bot: Bot):
@@ -106,6 +107,8 @@ async def run_changelog_update(bot: discord.Bot, all_versions: bool):
             for version in target_versions:
                 await process_changelog(session, bot, mod, version, int(channel_id))
                 await asyncio.sleep(1)
+
+        await send_enqueued_changelog_update(bot)
 
 
 #region GitHub utils
@@ -209,11 +212,11 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
             original_msg = await channel.fetch_message(msg_id)
             original_changelog = original_msg.embeds[0].description
             await original_msg.edit(content=None, embed=embed)
-            await send_changelog_update_notification(bot, mod_slug, original_changelog, changelog.strip())
+            await enqueue_changelog_change(mod, original_changelog, changelog.strip())
         else:
             msg = await channel.send(embed=embed)
             await write_message_id_file(session, mod_slug, msg.id)
-            await send_changelog_update_notification(bot, mod_slug, "", changelog.strip())
+            await enqueue_changelog_change(mod, "", changelog.strip())
 
         logger.log(msg=f"Updated embed for {mod_slug} ({len(changelog.strip())} chars)", level=INFO)
 
@@ -221,7 +224,7 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
         logger.log(msg=f"Error posting embed for {mod_slug}: {e}", level=ERROR)
 
 
-async def send_changelog_update_notification(bot: Bot, file: str, old_content: str, new_content: str):
+async def enqueue_changelog_change(mod_name: str, old_content: str, new_content: str):
     old_lines = old_content.splitlines()
     new_lines = new_content.splitlines()
 
@@ -235,19 +238,19 @@ async def send_changelog_update_notification(bot: Bot, file: str, old_content: s
     if len(additions) == 0:
         return
 
+    global changelog_update_queue
+    changelog_update_queue[mod_name] = additions
+
+    await append_changelog_to_weekly_queue(mod_name, additions)
+
+
+async def send_enqueued_changelog_update(bot: Bot):
     channel = bot.get_channel(WellKnown.get_channel(WellKnown.channel_changelog_update))
     mention = channel.guild.get_role(WellKnown.role_changelog_update).mention
-    await channel.send(f"{mention}\nUpdate to\n**{file}**\n" + "\n".join(additions))
-
-    # New: Append to queued weekly update file
-    await append_changelog_to_weekly_queue(file, additions)
+    await channel.send(f"{mention}\n")
 
 
-async def append_changelog_to_weekly_queue(file: str, additions: [str]):
-    # Extract mod_name from file format "ModName_Version.md"
-    base_name = pathlib.Path(file).stem  # e.g. "ModName_Version"
-    mod_name = base_name.split('_', 1)[0]  # take "ModName" part before first underscore
-
+async def append_changelog_to_weekly_queue(mod_name: str, additions: [str]): # take "ModName" part before first underscore
     queued_dir = pathlib.Path("Changelogs")
     queued_dir.mkdir(parents=True, exist_ok=True)
     queued_file = queued_dir / f"{mod_name}_QueuedWeeklyUpdate.md"
@@ -270,9 +273,9 @@ async def weekly_changelog_update():
     channel = webhook_bot.get_channel(WellKnown.get_channel(WellKnown.channel_weekly_changelog_update))
     mention = channel.guild.get_role(WellKnown.role_weekly_changelog_update).mention
     changes = await fetch_summary()
-    message = "There were no changes this week."
+    message = "### There were no changes this week."
     if changes != "None":
-        message = f"The following changes were added in the past week:\n\n{changes}\n-# **NOTE:**\n-# Changes that were previously added may have been removed.\n-# This summary only shows additions since the last week\n-# If you want to see all changes, please check the respective changelog channel."
+        message = f"### The following changes were added in the past week:\n\n{changes}\n-# **NOTE:**\n-# Changes that were previously added may have been removed.\n-# This summary only shows additions since the last week\n-# If you want to see all changes, please check the respective changelog channel."
     await channel.send(content=f"{mention}", embed=discord.Embed(description=message[:4096], color=0xFF4F00))
 
 
