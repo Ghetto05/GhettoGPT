@@ -68,7 +68,7 @@ class DevCommands(discord.Cog):
         await ctx.send_followup("Done.")
 
 
-    @slash_command(name="simulate-changelog-update-finished", description="[Test] Simulates the changelog update finishing", guild_ids=[954740284758032425])
+    @slash_command(name="simulate-changelog-finished", description="[Test] Simulates the changelog update finishing", guild_ids=[954740284758032425])
     async def simulate_changelog_update_finished(self, ctx: discord.ApplicationContext):
         if not is_dev:
             await ctx.respond("This is a test command and must not be used in production!")
