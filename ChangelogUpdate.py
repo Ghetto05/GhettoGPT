@@ -35,16 +35,20 @@ webhook_bot: Optional[discord.Bot] = None
 webhook_update_running = False
 
 
+def setup(bot: Bot):
+    global webhook_bot
+    webhook_bot = bot
+
+
 #region Webhook setup
 
 
-async def setup_changelog_update_webhook(bot: discord.Bot):
+async def setup_changelog_update_webhook():
     global flask_started, webhook_output_channel, webhook_bot
 
     logger.info("Setting up changelog update webhook")
 
-    webhook_output_channel = bot.get_channel(WellKnown.channel_bot_setup)
-    webhook_bot = bot
+    webhook_output_channel = webhook_bot.get_channel(WellKnown.channel_bot_setup)
 
     if not flask_started:
         threading.Thread(target=run_flask, daemon=True).start()
@@ -236,6 +240,10 @@ async def send_changelog_update_notification(bot: Bot, file: str, old_content: s
     await channel.send(f"{mention}\nUpdate to\n**{file}**\n" + "\n".join(additions))
 
     # New: Append to queued weekly update file
+    await append_changelog_to_weekly_queue(file, additions)
+
+
+async def append_changelog_to_weekly_queue(file: str, additions: []):
     # Extract mod_name from file format "ModName_Version.md"
     base_name = pathlib.Path(file).stem  # e.g. "ModName_Version"
     mod_name = base_name.split('_', 1)[0]  # take "ModName" part before first underscore
