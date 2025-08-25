@@ -1,7 +1,7 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from discord import Bot
-from flask import Flask, request
+from flask import Flask
 from logging import ERROR, INFO, getLogger
 from packaging.version import parse as parse_version
 from typing import Optional
@@ -22,9 +22,11 @@ import threading
 import WellKnown
 
 TAG_REPO = "Ghetto05/Mods"
+TAG_BRANCH = "main"
 FILE_REPO = "Ghetto05/GhettosModding"
 FILE_BRANCH = "master"
 BASE_URL = f"https://raw.githubusercontent.com/{FILE_REPO}/refs/heads/{FILE_BRANCH}"
+BASE_TAG_URL = f"https://raw.githubusercontent.com/{TAG_REPO}/refs/heads/{TAG_BRANCH}"
 API_URL = "https://api.github.com/repos/{}"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 logger = getLogger(__name__)
@@ -95,7 +97,7 @@ async def changelog_update():
 
 async def run_changelog_update(bot: discord.Bot, all_versions: bool):
     async with aiohttp.ClientSession() as session:
-        channels = await get_mappings(session, "ChangelogChannels.md")
+        channels = await get_mappings(session, "ChangelogChannels.md", False)
 
         for mod, channel_id in channels.items():
             versions = await get_all_changelog_versions(session, mod)
@@ -114,8 +116,8 @@ async def run_changelog_update(bot: discord.Bot, all_versions: bool):
 #region GitHub utils
 
 
-async def fetch_raw_file(session, path) -> str:
-    url = f"{BASE_URL}/{path}"
+async def fetch_raw_file(session, path: str, from_tag_repo: bool) -> str:
+    url = f"{BASE_URL if not from_tag_repo else BASE_TAG_URL}/{path}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3.raw"}
     async with session.get(url, headers=headers) as resp:
         return await resp.text() if resp.status == 200 else None
@@ -134,8 +136,8 @@ async def check_tag_exists(session, tag_name):
         return resp.status == 200
 
 
-async def get_mappings(session, file_path):
-    raw = await fetch_raw_file(session, file_path)
+async def get_mappings(session, file_path: str, from_tag_repo: bool) -> dict[str, str]:
+    raw = await fetch_raw_file(session, file_path, from_tag_repo)
     mapping = {}
     if raw:
         for line in raw.splitlines():
@@ -185,7 +187,7 @@ async def write_message_id_file(session, mod_slug, msg_id):
 
 async def process_changelog(session, bot: discord.Bot, mod, version, channel_id):
     mod_slug = f"{mod}_{version}"
-    changelog = await fetch_raw_file(session, f"Changelogs/{mod_slug}.md")
+    changelog = await fetch_raw_file(session, f"Changelogs/{mod_slug}.md", False)
     if not changelog:
         return
 
@@ -204,7 +206,7 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
         return
 
     msg_id_file = f"Changelogs/MetaData/{mod_slug}_MessageID.txt"
-    msg_id_raw = await fetch_raw_file(session, msg_id_file)
+    msg_id_raw = await fetch_raw_file(session, msg_id_file, False)
     msg_id = int(msg_id_raw.strip()) if msg_id_raw and msg_id_raw.strip().isdigit() else None
 
     try:
@@ -243,27 +245,35 @@ async def enqueue_changelog_change(mod_slug: str, old_content: str, new_content:
     global changelog_update_queue
     changelog_update_queue[mod_slug] = additions
 
-    await append_changelog_to_weekly_queue(mod_name, additions)
+    await append_changelog_to_weekly_queue(mod_slug, additions)
 
 
 async def send_enqueued_changelog_update(bot: Bot):
     channel = bot.get_channel(WellKnown.get_channel(WellKnown.channel_changelog_update))
     mention = channel.guild.get_role(WellKnown.role_changelog_update).mention
     output = ""
-    for key, values in changelog_update_queue.items():
-        lines = "\n".join(values)
-        output += f"\n\n## Update to {key}:\n{lines}" #ToDo: use proper mod name and version
-    await channel.send(f"{mention}{output}")
+    async with aiohttp.ClientSession() as session:
+        names = await get_mappings(session, "_Publish/FileNames.md", True)
+        for key, values in changelog_update_queue.items():
+            lines = "\n".join(values)
+            name = key.split('_', 1)[0]
+            version = key.split('_', 1)[1]
+            output += f"\n\n## Update to {names[name]} {version}:\n{lines}"
+        await channel.send(f"{mention}{output}")
 
 
-async def append_changelog_to_weekly_queue(mod_name: str, additions: [str]): # take "ModName" part before first underscore
+async def append_changelog_to_weekly_queue(mod_slug: str, additions: [str]): # take "ModName" part before first underscore
     queued_dir = pathlib.Path("Changelogs")
     queued_dir.mkdir(parents=True, exist_ok=True)
-    queued_file = queued_dir / f"{mod_name}_QueuedWeeklyUpdate.md"
+    queued_file = queued_dir / f"{mod_slug}_QueuedWeeklyUpdate.md"
 
     # Prepare text to append (add heading if file does not exist yet)
     if not queued_file.exists():
-        to_write = f"## {mod_name}\n" #ToDo: use actual mod name and version
+        async with aiohttp.ClientSession() as session:
+            names = await get_mappings(session, "_Publish/FileNames.md", True)
+            name = mod_slug.split('_', 1)[0]
+            version = mod_slug.split('_', 1)[1]
+            to_write = f"## {names[name]} {version}\n"
     else:
         to_write = "\n"
 
