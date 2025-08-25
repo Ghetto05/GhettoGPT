@@ -45,7 +45,7 @@ def changelog_webhook():
 
 
 @app.route('/webhooks/discord-bot/changelog-update-test', methods=['POST'])
-def changelog_webhook():
+def changelog_webhook_test():
     if not is_dev:
         return '', 204
     logger.info("[TEST] Change log update webhook triggered")
