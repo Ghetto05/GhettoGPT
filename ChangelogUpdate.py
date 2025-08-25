@@ -18,7 +18,6 @@ import logging
 import os
 import pathlib
 import re
-import threading
 import WellKnown
 
 TAG_REPO = "Ghetto05/Mods"
@@ -30,32 +29,15 @@ BASE_TAG_URL = f"https://raw.githubusercontent.com/{TAG_REPO}/refs/heads/{TAG_BR
 API_URL = "https://api.github.com/repos/{}"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 logger = getLogger(__name__)
-app = Flask(__name__)
-webhook_output_channel: Optional[discord.channel] = None
-flask_started = False
-webhook_bot: Optional[discord.Bot] = None
+output_bot: Optional[discord.Bot] = None
 webhook_update_running = False
 changelog_update_queue: dict[str, list[str]] = {}
+is_dev = os.environ.get("ENV") == "dev"
 
 
 def setup(bot: Bot):
-    global webhook_bot
-    webhook_bot = bot
-
-
-#region Webhook setup
-
-
-async def setup_changelog_update_webhook():
-    global flask_started, webhook_output_channel, webhook_bot
-
-    logger.info("Setting up changelog update webhook")
-
-    webhook_output_channel = webhook_bot.get_channel(WellKnown.channel_bot_setup)
-
-    if not flask_started:
-        threading.Thread(target=run_flask, daemon=True).start()
-        flask_started = True
+    global output_bot
+    output_bot = bot
 
 
 def setup_changelog_summary_scheduler(scheduler: AsyncIOScheduler):
@@ -65,24 +47,6 @@ def setup_changelog_summary_scheduler(scheduler: AsyncIOScheduler):
     )
 
 
-def run_flask():
-    app.run(host="0.0.0.0", port=5000)
-
-
-@app.route('/webhooks/discord-bot/changelog-update', methods=['POST'])
-def changelog_webhook():
-    logger.info("Changing log update webhook triggered")
-    if webhook_output_channel:
-        asyncio.run_coroutine_threadsafe(
-            changelog_update(),
-            webhook_bot.loop
-        )
-    return '', 204
-
-
-#endregion
-
-
 async def changelog_update():
     global webhook_update_running
     if webhook_update_running:
@@ -90,7 +54,7 @@ async def changelog_update():
         return
     webhook_update_running = True
     logger.info(f"Changelog update triggered by webhook")
-    await run_changelog_update(webhook_bot, False)
+    await run_changelog_update(output_bot, False)
     logger.info(f"Changelog update done")
     webhook_update_running = False
 
@@ -286,7 +250,7 @@ async def append_changelog_to_weekly_queue(mod_slug: str, additions: [str]): # t
 
 async def weekly_changelog_update():
     logger.log(msg="Sending weekly changelog summary", level=logging.INFO)
-    channel = webhook_bot.get_channel(WellKnown.get_channel(WellKnown.channel_weekly_changelog_update))
+    channel = output_bot.get_channel(WellKnown.get_channel(WellKnown.channel_weekly_changelog_update))
     mention = channel.guild.get_role(WellKnown.role_weekly_changelog_update).mention
     changes = await fetch_summary()
     message = "### There were no changes this week."
