@@ -1,21 +1,16 @@
-import asyncio
-import logging
 from datetime import timedelta
-from logging import getLogger
+from logging import getLogger, INFO, ERROR, error
+from os import getenv
 from typing import Optional
-
-import aiohttp
-import os
 from collections import defaultdict
-import discord
+from aiohttp import ClientSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
-from discord import Bot
+from discord import Bot, Embed, utils
 
 import WellKnown
 
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+GITHUB_TOKEN = getenv("GITHUB_TOKEN")
 logger = getLogger(__name__)
 update_bot: Optional[Bot] = None
 update_interval_minutes = 10
@@ -32,19 +27,19 @@ def setup_github_board_update(bot: Bot, scheduler: AsyncIOScheduler):
         run_periodic_update,
         trigger=IntervalTrigger(minutes=update_interval_minutes, start_date=next_hour)
     )
-    logger.log(msg=f"GitHub Board update scheduled to run every {update_interval_minutes} minutes starting at {next_hour} UTC", level=logging.INFO)
+    logger.log(msg=f"GitHub Board update scheduled to run every {update_interval_minutes} minutes starting at {next_hour} UTC", level=INFO)
 
 
 async def run_periodic_update():
     try:
-        logger.log(msg="Updating GitHub Board", level=logging.INFO)
+        logger.log(msg="Updating GitHub Board", level=INFO)
         await update_github_board(update_bot)
-    except Exception as e:
-        logger.log(msg="Error in updating GitHub board: {e}", level=logging.ERROR)
+    except Exception:
+        logger.log(msg="Error in updating GitHub board: {e}", level=ERROR)
 
 
 def get_next_interval():
-    now = discord.utils.utcnow().replace(second=0, microsecond=0)
+    now = utils.utcnow().replace(second=0, microsecond=0)
     minute = (now.minute // update_interval_minutes + 1) * update_interval_minutes
     next_run = now.replace(minute=0) + timedelta(minutes=minute)
 
@@ -56,7 +51,7 @@ def get_next_interval():
 
 async def update_github_board(bot: Bot):
     status_issue_groups = await fetch_project_issues()
-    now = discord.utils.utcnow()
+    now = utils.utcnow()
     next_run = get_next_interval()
     message_content = f"# GitHub Issue Board\nLast update: <t:{int(now.timestamp())}:f>\nNext update: <t:{int(next_run.timestamp())}:R>\n"
     for status, issues in status_issue_groups.items():
@@ -65,7 +60,7 @@ async def update_github_board(bot: Bot):
         message_content += f"\n## {status}\n"
         for issue in issues:
             message_content += f"- #{issue['number']}: {issue['title']}\n"
-    embed = discord.Embed(description=message_content, color=0xFF4F00)
+    embed = Embed(description=message_content, color=0xFF4F00)
     message = await bot.get_channel(WellKnown.channel_github_board).fetch_message(WellKnown.message_github_board)
     await message.edit(content="", embed=embed)
 
@@ -111,7 +106,7 @@ async def fetch_project_issues():
     has_next_page = True
     after = None
 
-    async with aiohttp.ClientSession() as session:
+    async with ClientSession() as session:
         while has_next_page:
             variables = {"after": after}
             async with session.post(url, json={"query": query, "variables": variables}, headers=headers) as resp:
@@ -120,7 +115,7 @@ async def fetch_project_issues():
                 try:
                     items_data = data["data"]["user"]["projectV2"]["items"]
                 except KeyError:
-                    logging.error(f"GitHub API error: {data}")
+                    error(f"GitHub API error: {data}")
                     break
 
                 for item in items_data["nodes"]:

@@ -1,9 +1,9 @@
-import random
 from io import BytesIO
-from logging import getLogger, INFO
+from logging import getLogger
+from random import choice
+
 from aiohttp import ClientSession
-import discord.ext
-from discord import Bot, slash_command
+from discord import Bot, slash_command, Cog, ApplicationContext, Embed, File
 
 GITHUB_USER = "Ghetto05"
 REPO = "RandomPrebuilts"
@@ -15,25 +15,27 @@ RAW_BASE_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}/{REPO}/{BRANCH}
 logger = getLogger(__name__)
 
 
-class RandomPrebuilt(discord.Cog):
+class RandomPrebuilt(Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
 
     @slash_command(name="randomgun", description="Get a random firearm save", guild_ids=[954740284758032425])
-    async def setup_commands(self, ctx: discord.ApplicationContext):
+    async def setup_commands(self, ctx: ApplicationContext):
         async with ClientSession() as session:
-            # Step 1: Get list of folders from GitHub
+            # Step 1: Get the list of folders from GitHub
             async with session.get(GITHUB_API_URL) as resp:
                 if resp.status != 200:
-                    return await ctx.send("Failed to fetch mod list from GitHub.")
+                    await ctx.send("Failed to fetch mod list from GitHub.")
+                    return
                 data = await resp.json()
 
             folders = [item["name"] for item in data if item["type"] == "dir"]
             if not folders:
-                return await ctx.send("No mod folders found.")
+                await ctx.send("No mod folders found.")
+                return
 
             # Step 2: Pick one randomly
-            folder = random.choice(folders)
+            folder = choice(folders)
             base_raw = f"{RAW_BASE_URL}/{folder}"
 
             txt_url = f"{base_raw}/title.txt"
@@ -43,19 +45,21 @@ class RandomPrebuilt(discord.Cog):
             # Step 3: Fetch text and JSON file
             async with session.get(txt_url) as txt_resp:
                 if txt_resp.status != 200:
-                    return await ctx.send(f"Failed to load title.txt for `{folder}`.")
+                    await ctx.send(f"Failed to load title.txt for `{folder}`.")
+                    return
                 title = (await txt_resp.text()).strip()
 
             async with session.get(json_url) as json_resp:
                 if json_resp.status != 200:
-                    return await ctx.send(f"Failed to load save.json for `{folder}`.")
+                    await ctx.send(f"Failed to load save.json for `{folder}`.")
+                    return
                 json_data = await json_resp.read()
 
-        # Step 4: Send embed + attachment
-        embed = discord.Embed(title=title, description=f"To install, drop int 'Mods/!GhettosFirearmSDKv2Saves/'", color=0xFF4F00)
+        # Step 4: Send embed and attachment
+        embed = Embed(title=title, description=f"To install, drop int 'Mods/!GhettosFirearmSDKv2Saves/'", color=0xFF4F00)
         embed.set_image(url=img_url)
 
-        file = discord.File(BytesIO(json_data), filename=f"{folder}.json")
+        file = File(BytesIO(json_data), filename=f"{folder}.json")
         await ctx.respond(embed=embed, file=file)
 
 

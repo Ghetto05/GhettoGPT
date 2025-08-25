@@ -42,16 +42,3 @@ def changelog_webhook():
             webhook_bot.loop
         )
     return '', 204
-
-
-@app.route('/webhooks/discord-bot/changelog-update-test', methods=['POST'])
-def changelog_webhook_test():
-    if not is_dev:
-        return '', 204
-    logger.info("[TEST] Change log update webhook triggered")
-    if webhook_output_channel:
-        run_coroutine_threadsafe(
-            changelog_update(),
-            webhook_bot.loop
-        )
-    return '', 204

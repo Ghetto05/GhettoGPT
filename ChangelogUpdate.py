@@ -1,7 +1,6 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from discord import Bot
-from flask import Flask
 from logging import ERROR, INFO, getLogger
 from packaging.version import parse as parse_version
 from typing import Optional
@@ -194,8 +193,6 @@ async def enqueue_changelog_change(mod_slug: str, old_content: str, new_content:
     old_lines = old_content.splitlines()
     new_lines = new_content.splitlines()
 
-    mod_name = mod_slug.split('_', 1)[0]
-
     matcher = difflib.SequenceMatcher(None, old_lines, new_lines)
     additions = []
 
@@ -226,12 +223,12 @@ async def send_enqueued_changelog_update(bot: Bot):
         await channel.send(f"{mention}{output}")
 
 
-async def append_changelog_to_weekly_queue(mod_slug: str, additions: [str]): # take "ModName" part before first underscore
+async def append_changelog_to_weekly_queue(mod_slug: str, additions: list[str]): # take "ModName" part before first underscore
     queued_dir = pathlib.Path("Changelogs")
     queued_dir.mkdir(parents=True, exist_ok=True)
     queued_file = queued_dir / f"{mod_slug}_QueuedWeeklyUpdate.md"
 
-    # Prepare text to append (add heading if file does not exist yet)
+    # Prepare text to append (add heading if the file does not exist yet)
     if not queued_file.exists():
         async with aiohttp.ClientSession() as session:
             names = await get_mappings(session, "_Publish/FileNames.md", True)
@@ -275,7 +272,7 @@ async def fetch_summary() -> str:
             content = await f.read()
         output += content + "\n"
 
-        # Delete file after reading
+        # Delete the file after reading
         await aiofiles.os.remove(queued_file)
 
     return output if output.strip() else "None"
