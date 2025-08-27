@@ -69,8 +69,8 @@ async def run_changelog_update(bot: Bot, all_versions: bool):
             for version in target_versions:
                 await process_changelog(session, bot, mod, version, int(channel_id))
                 await asyncio.sleep(1)
-
-        await send_enqueued_changelog_update(bot)
+        if len(changelog_update_queue) > 0:
+            await send_enqueued_changelog_update(bot)
 
 
 #region GitHub utils
