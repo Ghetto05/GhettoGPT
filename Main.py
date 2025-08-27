@@ -1,42 +1,45 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from ChangelogUpdate import setup_changelog_summary_scheduler
+from discord import Intents, Message
 from discord.ext import commands
 from GitHubBoardUpdate import setup_github_board_update
 from SpamBanner import check_and_ban_link_spammer
 from Webhooks import setup_webhooks
 
 import ChangelogUpdate
-import discord
 import logging
 import os
 import WellKnown
 
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-initialized = False
-
-intents = discord.Intents.all()
+intents = Intents.all()
 intents.members = True
 intents.message_content = True
 intents.presences = True
 
+
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+initialized = False
 bot = commands.Bot(intents=intents)
 logger = logging.getLogger(__name__)
 is_dev = os.environ.get("ENV") == "dev"
-
 extensions = ("cogs.Commands", "cogs.RandomPrebuilt",)
+
 
 for extension in extensions:
     bot.load_extension(extension)
 
+
 if is_dev:
     bot.load_extension("cogs.DevCommands")
+else:
+    bot.load_extension("cogs.ProdCommands")
 
 
 @bot.event
 async def on_ready():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    logger.log(msg=f"Logged in as {bot.user}", level=logging.INFO)
+    logger.info(f"Logged in as {bot.user}")
 
     global initialized
     if not initialized:
@@ -53,8 +56,8 @@ async def on_ready():
 
 
 @bot.event
-async def on_message(message: discord.Message):
-    logger.log(msg=f"Message received ({message.author.display_name}): {message.content}", level=logging.INFO)
+async def on_message(message: Message):
+    logger.info(f"Message received ({message.author.display_name}): {message.content}")
     if message.author.bot:
         return
 
@@ -69,6 +72,6 @@ async def on_message(message: discord.Message):
 
 if __name__ == "__main__":
     if not DISCORD_TOKEN:
-        logger.log(msg="DISCORD_TOKEN is missing.", level=logging.ERROR)
+        logger.error("DISCORD_TOKEN is missing.")
         exit(1)
     bot.run(DISCORD_TOKEN)

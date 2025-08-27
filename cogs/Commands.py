@@ -2,7 +2,7 @@ from FakeIPGetter import generate_public_ipv4
 from GitHubBoardUpdate import update_github_board
 from discord import Bot, slash_command
 from discord.commands import option
-from logging import INFO, getLogger
+from logging import getLogger
 from os import environ
 
 import discord.ext
@@ -35,5 +35,5 @@ class Commands(discord.Cog):
 
 
 def setup(bot: Bot):
-    logger.log(msg=f"Registering commands", level=INFO)
+    logger.info(f"Registering commands")
     bot.add_cog(Commands(bot))

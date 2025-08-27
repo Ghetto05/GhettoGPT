@@ -1,5 +1,5 @@
 from datetime import timedelta
-from logging import getLogger, INFO, ERROR, error
+from logging import getLogger, error
 from os import getenv
 from typing import Optional
 from collections import defaultdict
@@ -27,15 +27,15 @@ def setup_github_board_update(bot: Bot, scheduler: AsyncIOScheduler):
         run_periodic_update,
         trigger=IntervalTrigger(minutes=update_interval_minutes, start_date=next_hour)
     )
-    logger.log(msg=f"GitHub Board update scheduled to run every {update_interval_minutes} minutes starting at {next_hour} UTC", level=INFO)
+    logger.info(f"GitHub Board update scheduled to run every {update_interval_minutes} minutes starting at {next_hour} UTC")
 
 
 async def run_periodic_update():
     try:
-        logger.log(msg="Updating GitHub Board", level=INFO)
+        logger.info("Updating GitHub Board")
         await update_github_board(update_bot)
     except Exception:
-        logger.log(msg="Error in updating GitHub board: {e}", level=ERROR)
+        logger.error("Error in updating GitHub board: {e}")
 
 
 def get_next_interval():

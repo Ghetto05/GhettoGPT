@@ -1,4 +1,4 @@
-from logging import getLogger, INFO
+from logging import getLogger
 import re
 import discord
 from datetime import datetime, UTC
@@ -21,7 +21,7 @@ async def check_and_ban_link_spammer(message: discord.Message, bot: discord.Bot)
     if not (LINK_REGEX.search(message.content) or "discordapp.com/invite/" in message.content):
         return
 
-    logger.log(msg=f"Found message with link", level=INFO)
+    logger.info(f"Found message with link")
 
     now = datetime.now(UTC)
     user_id = message.author.id
@@ -40,7 +40,7 @@ async def check_and_ban_link_spammer(message: discord.Message, bot: discord.Bot)
         if content == message.content
     ]
 
-    logger.log(msg=f"Matches: {len(matches)}", level=INFO)
+    logger.info(f"Matches: {len(matches)}")
 
     if len(matches) >= spam_threshold:
         try:
@@ -49,7 +49,7 @@ async def check_and_ban_link_spammer(message: discord.Message, bot: discord.Bot)
             moderator_mention = moderation_channel.guild.get_role(WellKnown.role_moderator).mention
             await moderation_channel.send(f"{moderator_mention} Banned {message.author.mention} for spamming links")
         except discord.Forbidden:
-            logger.log(msg=f"Couldn't ban {message.author} — missing permissions", level=INFO)
+            logger.info(f"Couldn't ban {message.author} — missing permissions")
         for msg in matches:
             try:
                 await msg.delete()

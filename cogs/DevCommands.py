@@ -6,7 +6,7 @@ from ChangelogUpdate import (
 )
 from discord import Bot, slash_command
 from discord.commands import option
-from logging import INFO, getLogger
+from logging import getLogger
 from os import environ
 
 import discord.ext
@@ -79,5 +79,5 @@ class DevCommands(discord.Cog):
 
 
 def setup(bot: Bot):
-    logger.log(msg=f"Registering dev commands", level=INFO)
+    logger.info(f"Registering dev commands")
     bot.add_cog(DevCommands(bot))

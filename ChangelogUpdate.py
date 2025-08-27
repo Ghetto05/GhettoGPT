@@ -1,9 +1,10 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from discord import Bot
-from logging import ERROR, INFO, getLogger
+from discord import Bot, Embed
+from logging import getLogger
 from packaging.version import parse as parse_version
 from typing import Optional
+from os import environ, getenv
 
 import aiofiles
 import aiofiles.os
@@ -11,10 +12,6 @@ import aiohttp
 import asyncio
 import base64
 import difflib
-import discord
-import discord.ext
-import logging
-import os
 import pathlib
 import re
 import WellKnown
@@ -26,12 +23,12 @@ FILE_BRANCH = "master"
 BASE_URL = f"https://raw.githubusercontent.com/{FILE_REPO}/refs/heads/{FILE_BRANCH}"
 BASE_TAG_URL = f"https://raw.githubusercontent.com/{TAG_REPO}/refs/heads/{TAG_BRANCH}"
 API_URL = "https://api.github.com/repos/{}"
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+GITHUB_TOKEN = getenv("GITHUB_TOKEN")
 logger = getLogger(__name__)
-output_bot: Optional[discord.Bot] = None
+output_bot: Optional[Bot] = None
 webhook_update_running = False
 changelog_update_queue: dict[str, list[str]] = {}
-is_dev = os.environ.get("ENV") == "dev"
+is_dev = environ.get("ENV") == "dev"
 
 
 def setup(bot: Bot):
@@ -49,7 +46,7 @@ def setup_changelog_summary_scheduler(scheduler: AsyncIOScheduler):
 async def changelog_update():
     global webhook_update_running
     if webhook_update_running:
-        logger.log(msg="Changelog update already running", level=ERROR)
+        logger.error("Changelog update already running")
         return
     webhook_update_running = True
     logger.info(f"Changelog update triggered by webhook")
@@ -58,7 +55,7 @@ async def changelog_update():
     webhook_update_running = False
 
 
-async def run_changelog_update(bot: discord.Bot, all_versions: bool):
+async def run_changelog_update(bot: Bot, all_versions: bool):
     async with aiohttp.ClientSession() as session:
         channels = await get_mappings(session, "ChangelogChannels.md", False)
 
@@ -148,7 +145,7 @@ async def write_message_id_file(session, mod_slug, msg_id):
         return resp.status in (200, 201)
 
 
-async def process_changelog(session, bot: discord.Bot, mod, version, channel_id):
+async def process_changelog(session, bot: Bot, mod, version, channel_id):
     mod_slug = f"{mod}_{version}"
     changelog = await fetch_raw_file(session, f"Changelogs/{mod_slug}.md", False)
     if not changelog:
@@ -158,14 +155,14 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
     title = f"Release {version}" + ("" if tag_exists else " (WIP)")
 
     if len(changelog) > 4096:
-        logger.log(msg=f"Changelog too long ({len(changelog)} chars) — must be ≤ 4096 for embed.", level=ERROR)
+        logger.error(f"Changelog too long ({len(changelog)} chars) — must be ≤ 4096 for embed.")
         return
 
-    embed = discord.Embed(title=title, description=changelog, color=0xFF4F00)
+    embed = Embed(title=title, description=changelog, color=0xFF4F00)
 
     channel = bot.get_channel(channel_id)
     if not channel:
-        logger.log(msg=f"Channel {channel_id} not found.", level=ERROR)
+        logger.error(f"Channel {channel_id} not found.")
         return
 
     msg_id_file = f"Changelogs/MetaData/{mod_slug}_MessageID.txt"
@@ -183,10 +180,10 @@ async def process_changelog(session, bot: discord.Bot, mod, version, channel_id)
             await write_message_id_file(session, mod_slug, msg.id)
             await enqueue_changelog_change(mod_slug, "", changelog.strip())
 
-        logger.log(msg=f"Updated embed for {mod_slug} ({len(changelog.strip())} chars)", level=INFO)
+        logger.info(f"Updated embed for {mod_slug} ({len(changelog.strip())} chars)")
 
     except Exception as e:
-        logger.log(msg=f"Error posting embed for {mod_slug}: {e}", level=ERROR)
+        logger.error(f"Error posting embed for {mod_slug}: {e}")
 
 
 async def enqueue_changelog_change(mod_slug: str, old_content: str, new_content: str):
@@ -246,14 +243,14 @@ async def append_changelog_to_weekly_queue(mod_slug: str, additions: list[str]):
 
 
 async def weekly_changelog_update():
-    logger.log(msg="Sending weekly changelog summary", level=logging.INFO)
+    logger.info("Sending weekly changelog summary")
     channel = output_bot.get_channel(WellKnown.get_channel(WellKnown.channel_weekly_changelog_update))
     mention = channel.guild.get_role(WellKnown.role_weekly_changelog_update).mention
     changes = await fetch_summary()
     message = "### There were no changes this week."
     if changes != "None":
         message = f"### The following changes were added in the past week:\n\n{changes}\n-# **NOTE:**\n-# Changes that were previously added may have been removed.\n-# This summary only shows additions since the last week\n-# If you want to see all changes, please check the respective changelog channel."
-    await channel.send(content=f"{mention}", embed=discord.Embed(description=message[:4096], color=0xFF4F00))
+    await channel.send(content=f"{mention}", embed=Embed(description=message[:4096], color=0xFF4F00))
 
 
 async def fetch_summary() -> str:
