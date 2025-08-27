@@ -1,53 +1,63 @@
-import logging
-import os
-import discord
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from ChangelogUpdate import setup_changelog_summary_scheduler
+from discord import Intents, Message
 from discord.ext import commands
-import WellKnown
-from ChangelogUpdate import setup_changelog_update_webhook
-from ChangelogUpdateNotifier import setup_changelog_summary_scheduler
 from GitHubBoardUpdate import setup_github_board_update
 from SpamBanner import check_and_ban_link_spammer
+from Webhooks import setup_webhooks
 
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+import ChangelogUpdate
+import logging
+import os
+import WellKnown
 
-initialized = False
 
-intents = discord.Intents.all()
+intents = Intents.all()
 intents.members = True
 intents.message_content = True
 intents.presences = True
 
+
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+initialized = False
 bot = commands.Bot(intents=intents)
 logger = logging.getLogger(__name__)
 is_dev = os.environ.get("ENV") == "dev"
-
 extensions = ("cogs.Commands", "cogs.RandomPrebuilt",)
+
 
 for extension in extensions:
     bot.load_extension(extension)
 
 
+if is_dev:
+    bot.load_extension("cogs.DevCommands")
+else:
+    bot.load_extension("cogs.ProdCommands")
+
+
 @bot.event
 async def on_ready():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    logger.log(msg=f"Logged in as {bot.user}", level=logging.INFO)
+    logger.info(f"Logged in as {bot.user}")
 
     global initialized
     if not initialized:
         initialized = True
+        ChangelogUpdate.setup(bot)
+        await setup_webhooks(bot)
         if not is_dev:
             scheduler = AsyncIOScheduler()
             scheduler.start()
-            setup_changelog_summary_scheduler(bot, scheduler)
+            setup_changelog_summary_scheduler(scheduler)
             setup_github_board_update(bot, scheduler)
-            await setup_changelog_update_webhook(bot)
-        await bot.get_channel(WellKnown.get_channel(WellKnown.channel_bot_setup)).send(f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up...{' (test instance)' if is_dev else ''}")
+        await (bot.get_channel(WellKnown.get_channel(WellKnown.channel_bot_setup)).send(
+            f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up...{' (test instance - changelog rework)' if is_dev else ''}"))
 
 
 @bot.event
-async def on_message(message: discord.Message):
-    logger.log(msg=f"Message received ({message.author.display_name}): {message.content}", level=logging.INFO)
+async def on_message(message: Message):
+    logger.info(f"Message received ({message.author.display_name}): {message.content}")
     if message.author.bot:
         return
 
@@ -62,6 +72,6 @@ async def on_message(message: discord.Message):
 
 if __name__ == "__main__":
     if not DISCORD_TOKEN:
-        logger.log(msg="DISCORD_TOKEN is missing.", level=logging.ERROR)
+        logger.error("DISCORD_TOKEN is missing.")
         exit(1)
     bot.run(DISCORD_TOKEN)
