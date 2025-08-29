@@ -216,7 +216,7 @@ async def send_enqueued_changelog_update(bot: Bot):
             lines = "\n".join(values)
             name = key.split('_', 1)[0]
             version = key.split('_', 1)[1]
-            output += f"\n\n### Update to {names[name]} {version}:\n{lines}"
+            output += f"\n\n**Update to**\n## {names[name]} {version}:\n{lines}"
         await channel.send(f"{mention}{output}")
 
 
