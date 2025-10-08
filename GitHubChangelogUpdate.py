@@ -44,7 +44,8 @@ def setup_changelog_summary_scheduler(scheduler: AsyncIOScheduler):
 
 
 async def changelog_update():
-    global webhook_update_running
+    global webhook_update_running, changelog_update_queue
+    changelog_update_queue = []
     if webhook_update_running:
         logger.error("Changelog update already running")
         return
