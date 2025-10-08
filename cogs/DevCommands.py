@@ -1,10 +1,11 @@
+import DevOpsBoardUpdate
 from GitHubChangelogUpdate import (
     run_changelog_update,
     weekly_changelog_update,
     send_enqueued_changelog_update,
     enqueue_changelog_change,
 )
-from discord import Bot, slash_command
+from discord import Bot, slash_command, Embed
 from discord.commands import option
 from logging import getLogger
 from os import environ
@@ -76,6 +77,27 @@ class DevCommands(discord.Cog):
         await ctx.respond("Sending changelog update...")
         await send_enqueued_changelog_update(self.bot)
         await ctx.send_followup("Done.")
+
+
+    @slash_command(name="simulate-issue-board", description="[Test] Queries the issue board", guild_ids=[954740284758032425])
+    async def simulate_changelog_update_finished(self, ctx: discord.ApplicationContext):
+        if not is_dev:
+            await ctx.respond("This is a test command and must not be used in production!")
+            return
+        msg = await ctx.respond("Getting issue board...")
+        status_issue_groups = await DevOpsBoardUpdate.fetch_project_issues()
+        now = discord.utils.utcnow()
+        next_run = DevOpsBoardUpdate.get_next_interval()
+        message_content = f"# DevOps Issue Board\nLast update: <t:{int(now.timestamp())}:f>\nNext update: <t:{int(next_run.timestamp())}:R>\n"
+        for status, issues in status_issue_groups.items():
+            if status not in ["Backlog", "Urgent ToDo", "In progress", "Testing", ]:
+                continue
+            message_content += f"\n## {status}\n"
+            for issue in issues:
+                message_content += f"- #{issue['number']}: {issue['title']}\n"
+        embed = Embed(description=message_content, color=0xFF4F00)
+        await msg.edit(content="", embed=embed)
+
 
 
 def setup(bot: Bot):
