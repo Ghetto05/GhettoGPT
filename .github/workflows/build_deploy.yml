@@ -36,7 +36,7 @@ jobs:
 
         echo "Tagging image as: $TAG"
 
-        docker build -t $IMAGE_NAME:$TAG .
+        docker build --no-cache -t $IMAGE_NAME:$TAG .
         docker push $IMAGE_NAME:$TAG
 
         # Push 'latest' tag only for master branch (optional)
