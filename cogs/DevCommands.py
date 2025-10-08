@@ -1,4 +1,4 @@
-from ChangelogUpdate import (
+from GitHubChangelogUpdate import (
     run_changelog_update,
     weekly_changelog_update,
     send_enqueued_changelog_update,
