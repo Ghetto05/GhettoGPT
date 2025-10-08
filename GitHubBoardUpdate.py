@@ -16,7 +16,7 @@ update_bot: Optional[Bot] = None
 update_interval_minutes = 10
 
 
-def setup_github_board_update(bot: Bot, scheduler: AsyncIOScheduler):
+def setup_board_update(bot: Bot, scheduler: AsyncIOScheduler):
     global update_bot
     update_bot = bot
     # Round to next hour
@@ -33,7 +33,7 @@ def setup_github_board_update(bot: Bot, scheduler: AsyncIOScheduler):
 async def run_periodic_update():
     try:
         logger.info("Updating GitHub Board")
-        await update_github_board(update_bot)
+        await update_board(update_bot)
     except Exception:
         logger.error("Error in updating GitHub board: {e}")
 
@@ -49,7 +49,7 @@ def get_next_interval():
     return next_run
 
 
-async def update_github_board(bot: Bot):
+async def update_board(bot: Bot):
     status_issue_groups = await fetch_project_issues()
     now = utils.utcnow()
     next_run = get_next_interval()
@@ -61,7 +61,7 @@ async def update_github_board(bot: Bot):
         for issue in issues:
             message_content += f"- #{issue['number']}: {issue['title']}\n"
     embed = Embed(description=message_content, color=0xFF4F00)
-    message = await bot.get_channel(WellKnown.channel_github_board).fetch_message(WellKnown.message_github_board)
+    message = await bot.get_channel(WellKnown.channel_issue_board).fetch_message(WellKnown.message_issue_board)
     await message.edit(content="", embed=embed)
 
 

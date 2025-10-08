@@ -49,9 +49,9 @@ async def on_ready():
             scheduler = AsyncIOScheduler()
             scheduler.start()
             GitHubChangelogUpdate.setup_changelog_summary_scheduler(scheduler)
-            GitHubBoardUpdate.setup_github_board_update(bot, scheduler)
+            GitHubBoardUpdate.setup_board_update(bot, scheduler)
         await (bot.get_channel(WellKnown.get_channel(WellKnown.channel_bot_setup)).send(
-            f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up...{' (test instance - changelog rework)' if is_dev else ''}"))
+            f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up...{' (test instance)' if is_dev else ''}"))
 
 
 @bot.event
