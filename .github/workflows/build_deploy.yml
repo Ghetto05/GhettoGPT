@@ -15,10 +15,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0       # Full history / full clone
-        clean: true          # Clean workspace to avoid residues
-        sparse-checkout-cone-mode: false  # disable sparse checkout unless necessary
+    - name: Show main.py contents
+      run: cat ./Main.py
     - name: Log in to GitHub Container Registry
       uses: docker/login-action@v2
       with:
