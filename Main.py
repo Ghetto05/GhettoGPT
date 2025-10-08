@@ -51,7 +51,7 @@ async def on_ready():
             GitHubChangelogUpdate.setup_changelog_summary_scheduler(scheduler)
             GitHubBoardUpdate.setup_board_update(bot, scheduler)
         await (bot.get_channel(WellKnown.get_channel(WellKnown.channel_bot_setup)).send(
-            f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up...{' (test instance)' if is_dev else ''}"))
+            f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up...{' KILL ME (test instance)' if is_dev else ''}"))
 
 
 @bot.event
