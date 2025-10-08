@@ -66,7 +66,7 @@ async def update_board(bot: Bot):
     next_run = get_next_interval()
     message_content = f"# DevOps Issue Board\nLast update: <t:{int(now.timestamp())}:f>\nNext update: <t:{int(next_run.timestamp())}:R>\n"
     for status, issues in status_issue_groups.items():
-        if status not in [ "Backlog", "Urgent ToDo", "In progress", "Testing", ]:
+        if status not in [ "To Do", "Urgent", "Doing", ]:
             continue
         message_content += f"\n## {status}\n"
         for issue in issues:
