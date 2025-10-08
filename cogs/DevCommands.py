@@ -84,7 +84,7 @@ class DevCommands(discord.Cog):
         if not is_dev:
             await ctx.respond("This is a test command and must not be used in production!")
             return
-        msg = await ctx.respond("Getting issue board...")
+        msg = await ctx.respond("Getting issue board from DevOps...")
         status_issue_groups = await DevOpsBoardUpdate.fetch_project_issues()
         message_content = f"# DevOps Issue Board\n"
         for status, issues in status_issue_groups.items():
