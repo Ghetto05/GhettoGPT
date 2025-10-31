@@ -52,7 +52,7 @@ async def on_ready():
             setup_changelog_summary_scheduler(scheduler)
             setup_github_board_update(bot, scheduler)
         await (bot.get_channel(WellKnown.get_channel(WellKnown.channel_bot_setup)).send(
-            f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up...{' (test instance - changelog rework)' if is_dev else ''}"))
+            f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up (version 1)...{' (test instance - changelog rework)' if is_dev else ''}"))
 
 
 @bot.event
