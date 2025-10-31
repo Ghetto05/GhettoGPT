@@ -14,16 +14,15 @@ async def find_messages_with_words(guild: Guild, words: List[str]) -> List[Tuple
     for channel in guild.text_channels:
         logger.info(f"Searching channel {channel.name}")
         try:
-            history = await channel.history(limit=None).flatten()
-            logger.info(f"Checking {len(history)} messages...")
+            # logger.info(f"Checking {len(history)} messages...")
             checked = 0
-            async for message in history:
+            async for message in channel.history(limit=None):
                 if any(pattern.search(message.content) for pattern in patterns):
                     matching_messages.append((message.id, message.content))
                 checked += 1
                 if checked % 1000 == 0:
                     logger.info(f"Checked {checked} messages...")
         except Exception as e:
-            logger.error(f"Failed to search channel {channel.name}:\n\n{e}\n\n")
+            logger.error(f"Failed to search channel {channel.name}:\n{e}")
 
     return matching_messages
