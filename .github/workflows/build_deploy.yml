@@ -6,8 +6,8 @@ env:
   IMAGE_NAME: ghcr.io/ghetto05/ghettogpt
 jobs:
   build-and-deploy:
-    # runs-on: ubuntu-latest
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
+    # runs-on: self-hosted
 
     permissions:
       contents: read
