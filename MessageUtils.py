@@ -14,7 +14,7 @@ async def find_messages_with_words(guild: Guild, words: List[str]) -> List[Tuple
     for channel in guild.text_channels:
         logger.info(f"Searching channel {channel.name}")
         try:
-            history = channel.history(limit=None)
+            history = channel.history(limit=None).flatten()
             logger.info(f"Checking {len(history)} messages...")
             checked = 0
             async for message in history:
