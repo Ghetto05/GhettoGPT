@@ -23,7 +23,7 @@ async def find_messages_with_words(guild: Guild, words: List[str]) -> List[Tuple
                 checked += 1
                 if checked % 1000 == 0:
                     logger.info(f"Checked {checked} messages...")
-        except:
-            continue
+        except Exception as e:
+            logger.error(f"Failed to search channel {channel.name}:\n\n{e}\n\n")
 
     return matching_messages
