@@ -222,7 +222,7 @@ async def send_enqueued_changelog_update(bot: Bot):
 
 
 async def append_changelog_to_weekly_queue(mod_slug: str, additions: list[str]): # take "ModName" part before first underscore
-    queued_dir = pathlib.Path("Changelogs")
+    queued_dir = pathlib.Path("data/changelogs")
     queued_dir.mkdir(parents=True, exist_ok=True)
     queued_file = queued_dir / f"{mod_slug}_QueuedWeeklyUpdate.md"
 
@@ -256,7 +256,7 @@ async def weekly_changelog_update():
 
 async def fetch_summary() -> str:
     import pathlib
-    queued_dir = pathlib.Path("Changelogs")
+    queued_dir = pathlib.Path("data/changelogs")
     if not queued_dir.exists():
         return "None"
     output = ""
