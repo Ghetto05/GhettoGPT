@@ -5,7 +5,7 @@ from threading import Thread
 from typing import Optional
 from discord import Bot, channel
 from flask import Flask
-from ChangelogUpdate import changelog_update
+from GitHubChangelogUpdate import changelog_update
 
 import WellKnown
 

@@ -1,5 +1,5 @@
 from FakeIPGetter import generate_public_ipv4
-from GitHubBoardUpdate import update_github_board
+from GitHubBoardUpdate import update_board
 from discord import Bot, slash_command
 from discord.commands import option
 from logging import getLogger
@@ -30,7 +30,7 @@ class Commands(discord.Cog):
     @slash_command(name="update-github-board", description="Update the GitHub issue board", guild_ids=[954740284758032425])
     async def update_github_board(self, ctx: discord.ApplicationContext):
         await ctx.respond("Updating GitHub issues...")
-        await update_github_board(self.bot)
+        await update_board(self.bot)
         await ctx.send_followup("Done.")
 
 

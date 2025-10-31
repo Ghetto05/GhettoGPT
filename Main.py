@@ -1,12 +1,11 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from ChangelogUpdate import setup_changelog_summary_scheduler
 from discord import Intents, Message
 from discord.ext import commands
-from GitHubBoardUpdate import setup_github_board_update
 from SpamBanner import check_and_ban_link_spammer
 from Webhooks import setup_webhooks
 
-import ChangelogUpdate
+import GitHubBoardUpdate
+import GitHubChangelogUpdate
 import logging
 import os
 import WellKnown
@@ -44,15 +43,15 @@ async def on_ready():
     global initialized
     if not initialized:
         initialized = True
-        ChangelogUpdate.setup(bot)
+        GitHubChangelogUpdate.setup(bot)
         await setup_webhooks(bot)
         if not is_dev:
             scheduler = AsyncIOScheduler()
             scheduler.start()
-            setup_changelog_summary_scheduler(scheduler)
-            setup_github_board_update(bot, scheduler)
+            GitHubChangelogUpdate.setup_changelog_summary_scheduler(scheduler)
+            GitHubBoardUpdate.setup_board_update(bot, scheduler)
         await (bot.get_channel(WellKnown.get_channel(WellKnown.channel_bot_setup)).send(
-            f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up (version 1)...{' (test instance - changelog rework)' if is_dev else ''}"))
+            f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up (version 1)...{' (test instance)' if is_dev else ''}"))
 
 
 @bot.event
