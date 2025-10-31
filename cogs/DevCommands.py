@@ -85,15 +85,16 @@ class DevCommands(discord.Cog):
     @option(
         "words",
         description="The words that should be searched for",
-        input_type=[str],
+        input_type=str,
         required=True
     )
-    async def find_all_messages(self, ctx: discord.ApplicationContext, words: list[str]):
+    async def find_all_messages(self, ctx: discord.ApplicationContext, words: str):
         if not is_dev:
             await ctx.respond("This is a test command and must not be used in production!")
             return
         await ctx.respond("Searching for messages...")
-        messages = await MessageUtils.find_messages_with_words(ctx.guild, words)
+        word_list = [w.strip() for w in words.split(",")]
+        messages = await MessageUtils.find_messages_with_words(ctx.guild, word_list)
 
         message_texts = []
         current_length = 0
