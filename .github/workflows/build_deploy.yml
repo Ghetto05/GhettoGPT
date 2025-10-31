@@ -36,8 +36,8 @@ jobs:
     - name: Call Portainer webhook to trigger prod deploy
       if: success() && github.ref == 'refs/heads/master'
       run: |
-        curl -X -s POST https://portainer.ghetto05.com/api/stacks/webhooks/576b59cc-8544-4804-a936-e817c711434e # prod instance
+        curl -s -X POST https://portainer.ghetto05.com/api/stacks/webhooks/576b59cc-8544-4804-a936-e817c711434e # prod instance
     - name: Call Portainer webhook to trigger dev deploy
       if: success() && github.ref != 'refs/heads/master'
       run: |
-        curl -X -s POST https://portainer.ghetto05.com/api/stacks/webhooks/bb5093a0-2769-4ed4-a4de-bfc3d4d63c8f # dev instance
+        curl -s -X POST https://portainer.ghetto05.com/api/stacks/webhooks/bb5093a0-2769-4ed4-a4de-bfc3d4d63c8f # dev instance
