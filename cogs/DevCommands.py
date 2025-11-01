@@ -102,7 +102,7 @@ class DevCommands(discord.Cog):
         checked = 0
 
         for msg in messages:
-            msg_text = str(msg) + "\n"
+            msg_text = msg.content + "\n"
             if current_length + len(msg_text) <= 1900:
                 message_texts.append(msg_text)
                 current_length += len(msg_text)

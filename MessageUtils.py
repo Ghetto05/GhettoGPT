@@ -1,11 +1,11 @@
 from logging import getLogger
 from typing import List, Tuple
-from discord import Guild
+from discord import Guild, Message
 import re
 
 logger = getLogger(__name__)
 
-async def find_messages_with_words(guild: Guild, words: List[str]) -> List[Tuple[int, str]]:
+async def find_messages_with_words(guild: Guild, words: List[str]) -> List[Message]:
     matching_messages = []
     patterns = [re.compile(r'\b' + re.escape(word) + r'\b', re.IGNORECASE) for word in words]
 
@@ -33,7 +33,7 @@ async def find_messages_with_words(guild: Guild, words: List[str]) -> List[Tuple
             checked = 0
             async for message in channel.history(limit=None):
                 if any(pattern.search(message.content) for pattern in patterns):
-                    matching_messages.append((message.id, message.content))
+                    matching_messages.append(message)
                 checked += 1
                 if checked % 1000 == 0:
                     logger.info(f"Checked {checked} messages...")
