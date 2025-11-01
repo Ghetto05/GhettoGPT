@@ -99,6 +99,7 @@ class DevCommands(discord.Cog):
         message_texts = []
         current_length = 0
         remaining = 0
+        checked = 0
 
         for msg in messages:
             msg_text = str(msg) + "\n"
@@ -107,12 +108,13 @@ class DevCommands(discord.Cog):
                 current_length += len(msg_text)
             else:
                 remaining += 1
+            checked += 1
 
         formatted_message = "".join(message_texts)
         if remaining > 0:
             formatted_message += f"\n(*{remaining}* more messages)"
 
-        await ctx.send_followup(f"Found messages: {len(messages)}\n\n{formatted_message}")
+        await ctx.send_followup(f"Found messages: {checked}\n\n{formatted_message}")
 
 
 def setup(bot: Bot):
