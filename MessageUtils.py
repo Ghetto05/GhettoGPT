@@ -10,17 +10,17 @@ async def find_messages_with_words(guild: Guild, words: List[str]) -> List[Tuple
     patterns = [re.compile(r'\b' + re.escape(word) + r'\b', re.IGNORECASE) for word in words]
 
     channels = [
-        #954741258545418270, # general
+        954741258545418270, # general
         1052938720514420797, # non-english
-        #1285384126542774384, # qna
+        1285384126542774384, # qna
         1200949055325491262, # quote-pit
         1018586521210724392, # screenshots
         1080825809125769288, # gun-creation-discussion
-        #974281568388546611, # memes
-        #1030587137797664858, # media
-        #1196069832022573136, # clips
-        #1113283690240417812, # cursed-firearms
-        #1194049277710831666 # schizo-posting
+        974281568388546611, # memes
+        1030587137797664858, # media
+        1196069832022573136, # clips
+        1113283690240417812, # cursed-firearms
+        1194049277710831666 # schizo-posting
     ]
 
     logger.info(f"Searching for messages with words {words}")

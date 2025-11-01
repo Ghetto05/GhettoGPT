@@ -112,7 +112,7 @@ class DevCommands(discord.Cog):
 
         formatted_message = "".join(message_texts)
         if remaining > 0:
-            formatted_message += f"\n(*{remaining}* more messages)"
+            formatted_message += f"\n({remaining} more messages)"
 
         await ctx.channel.send(content=f"{ctx.author.mention} Found messages: {checked}\n\n{formatted_message}")
 
