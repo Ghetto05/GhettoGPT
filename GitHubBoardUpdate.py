@@ -61,7 +61,7 @@ async def update_board(bot: Bot):
         for issue in issues:
             message_content += f"- #{issue['number']}: {issue['title']}\n"
     embed = Embed(description=message_content, color=0xFF4F00)
-    message = await bot.get_channel(WellKnown.channel_issue_board).fetch_message(WellKnown.message_issue_board)
+    message = await bot.get_channel(WellKnown.channel_github_issue_board).fetch_message(WellKnown.message_github_issue_board)
     await message.edit(content="", embed=embed)
 
 

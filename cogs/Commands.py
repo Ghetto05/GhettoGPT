@@ -1,10 +1,11 @@
 from FakeIPGetter import generate_public_ipv4
-from GitHubBoardUpdate import update_board
 from discord import Bot, slash_command
 from discord.commands import option
 from logging import getLogger
 from os import environ
 
+import DevOpsBoardUpdate
+import GitHubBoardUpdate
 import discord.ext
 
 logger = getLogger(__name__)
@@ -30,7 +31,14 @@ class Commands(discord.Cog):
     @slash_command(name="update-github-board", description="Update the GitHub issue board", guild_ids=[954740284758032425])
     async def update_github_board(self, ctx: discord.ApplicationContext):
         await ctx.respond("Updating GitHub issues...")
-        await update_board(self.bot)
+        await GitHubBoardUpdate.update_board(self.bot)
+        await ctx.send_followup("Done.")
+
+
+    @slash_command(name="update-devops-board", description="Update the DevOps issue board", guild_ids=[954740284758032425])
+    async def update_devops_board(self, ctx: discord.ApplicationContext):
+        await ctx.respond("Updating DevOps issues...")
+        await DevOpsBoardUpdate.update_board(self.bot)
         await ctx.send_followup("Done.")
 
 
