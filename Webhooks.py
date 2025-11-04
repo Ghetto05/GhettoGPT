@@ -67,7 +67,7 @@ def devops_webhook():
     fields = resource.get('fields', {})
     comment_text = fields.get('System.History')
     author_info = fields.get('System.ChangedBy') or {}
-    author_name = author_info.get('displayName', 'Azure DevOps')
+    author_name = author_info.split('<')[0].strip()
 
     if comment_text:
         thread_id = asyncio.run_coroutine_threadsafe(
@@ -78,7 +78,7 @@ def devops_webhook():
         if thread_id:
             # Post comment to the Discord thread asynchronously
             future = run_coroutine_threadsafe(
-                webhook_bot.get_channel(thread_id).send(f"**{author_name}**:\n{comment_text}"),
+                webhook_bot.get_channel(thread_id).send(f"**Comment from {author_name}**\n{comment_text}"),
                 webhook_bot.loop
             )
             try:
