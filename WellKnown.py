@@ -8,6 +8,7 @@ channel_github_issue_board = 1395175095630041221
 channel_devops_issue_board = 1434911022380089384
 channel_changelog_update = 1395314696772653056
 channel_weekly_changelog_update = 1395314867958710322
+channel_devops_ticket_system = 1435283926561063085
 
 user_ghetto05 = 714263935746048072
 

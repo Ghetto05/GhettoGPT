@@ -2,6 +2,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord import Intents, Message
 from discord.ext import commands
 
+import Database
 import DevOpsBoardUpdate
 from SpamBanner import check_and_ban_link_spammer
 from Webhooks import setup_webhooks
@@ -45,6 +46,7 @@ async def on_ready():
     global initialized
     if not initialized:
         initialized = True
+        await Database.init_pool()
         GitHubChangelogUpdate.setup(bot)
         await setup_webhooks(bot)
         if not is_dev:
