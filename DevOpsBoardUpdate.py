@@ -1,4 +1,3 @@
-import base64
 from datetime import timedelta
 from logging import getLogger
 from os import getenv
@@ -9,6 +8,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from discord import Bot, Embed, utils
 import WellKnown
+import base64
 
 DEVOPS_ORG = getenv("DEVOPS_ORG")
 DEVOPS_PROJECT = getenv("DEVOPS_PROJECT")
@@ -48,8 +48,7 @@ async def update_board(bot: Bot):
     now = utils.utcnow()
     next_run = get_next_interval()
 
-    # Adjust this list to match your Azure DevOps board column names exactly
-    desired_columns = ["Backlog", "To Do", "In Progress", "Testing", "Done"]
+    desired_columns = ["To Do", "Urgent", "Doing"]
 
     message_content = f"# Azure DevOps Board\nLast update: <t:{int(now.timestamp())}:f>\nNext update: <t:{int(next_run.timestamp())}:R>\n"
 
@@ -61,7 +60,7 @@ async def update_board(bot: Bot):
         for issue in issues:
             message_content += f"- #{issue['number']}: {issue['title']}\n"
 
-    embed = Embed(description=message_content, color=0x0078D4)  # Azure blue color
+    embed = Embed(description=message_content, color=0xFF4F00)
     message = await bot.get_channel(WellKnown.channel_devops_issue_board).fetch_message(WellKnown.message_devops_issue_board)
     await message.edit(content="", embed=embed)
 
@@ -72,8 +71,6 @@ async def fetch_project_issues():
         "Content-Type": "application/json"
     }
 
-    # Note: No need to explicitly select System.BoardColumn in WIQL because it fetches the work item IDs.
-    # Actual field values are fetched later for each work item.
     wiql_query = """
     SELECT [System.Id], [System.Title], [System.State] 
     FROM WorkItems 

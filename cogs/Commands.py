@@ -28,20 +28,6 @@ class Commands(discord.Cog):
         await ctx.respond(f"\"{user.display_name}\"'s IP is {generate_public_ipv4(user.id)}")
 
 
-    @slash_command(name="update-github-board", description="Update the GitHub issue board", guild_ids=[954740284758032425])
-    async def update_github_board(self, ctx: discord.ApplicationContext):
-        await ctx.respond("Updating GitHub issues...")
-        await GitHubBoardUpdate.update_board(self.bot)
-        await ctx.send_followup("Done.")
-
-
-    @slash_command(name="update-devops-board", description="Update the DevOps issue board", guild_ids=[954740284758032425])
-    async def update_devops_board(self, ctx: discord.ApplicationContext):
-        await ctx.respond("Updating DevOps issues...")
-        await DevOpsBoardUpdate.update_board(self.bot)
-        await ctx.send_followup("Done.")
-
-
 def setup(bot: Bot):
     logger.info(f"Registering commands")
     bot.add_cog(Commands(bot))
