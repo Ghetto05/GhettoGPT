@@ -22,6 +22,11 @@ class AzureDevOpsClient:
                 "op": "add",
                 "path": "/fields/System.Description",
                 "value": description
+            },
+            {
+              "op": "add",
+              "path": "/multilineFieldsFormat/System.Description",
+              "value": "Markdown"
             }
         ]
         response = requests.post(url, auth=self.auth, headers=self.headers, json=json_body)

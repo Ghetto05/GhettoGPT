@@ -69,7 +69,7 @@ def devops_webhook():
     author_info = fields.get('System.ChangedBy') or {}
     author_name = author_info.split('<')[0].strip()
 
-    if comment_text:
+    if comment_text and not comment_text.startswith("-# [Discord]"):
         thread_id = asyncio.run_coroutine_threadsafe(
             Database.get_thread_id(work_item_id),
             webhook_bot.loop
@@ -78,7 +78,7 @@ def devops_webhook():
         if thread_id:
             # Post comment to the Discord thread asynchronously
             future = run_coroutine_threadsafe(
-                webhook_bot.get_channel(thread_id).send(f"**Comment from {author_name}**\n{comment_text}"),
+                webhook_bot.get_channel(thread_id).send(f"-# Comment from:\n**{author_name}**\n{comment_text}"),
                 webhook_bot.loop
             )
             try:

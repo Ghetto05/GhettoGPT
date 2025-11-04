@@ -49,7 +49,7 @@ async def handle_message(message: discord.Message) -> bool:
         if work_item_id:
             # Add comment to Azure DevOps asynchronously (run in executor if sync)
             await asyncio.get_running_loop().run_in_executor(
-                None, lambda: azure_devops_client.add_comment_to_work_item(work_item_id, f"**Message from {message.author.display_name}**\n{message.content}")
+                None, lambda: azure_devops_client.add_comment_to_work_item(work_item_id, f"-# [Discord] Message from:\**{message.author.display_name}**\n{message.content}")
             )
         return True
     return False
