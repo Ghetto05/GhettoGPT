@@ -66,7 +66,7 @@ async def on_message(message: Message):
     if message.author.bot:
         return
 
-    if DevOpsTicketSystem.handle_message(message):
+    if await DevOpsTicketSystem.handle_message(message):
         return
 
     if not is_dev:
@@ -80,7 +80,7 @@ async def on_message(message: Message):
 
 @bot.event
 async def on_thread_create(thread):
-    if DevOpsTicketSystem.handle_thread_creation(thread):
+    if await DevOpsTicketSystem.handle_thread_creation(thread):
         return
 
 
