@@ -2,6 +2,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from discord import Intents, Message
 from discord.ext import commands
 
+import DevOpsBoardUpdate
 from SpamBanner import check_and_ban_link_spammer
 from Webhooks import setup_webhooks
 
@@ -51,7 +52,7 @@ async def on_ready():
             scheduler.start()
             GitHubChangelogUpdate.setup_changelog_summary_scheduler(scheduler)
             GitHubBoardUpdate.setup_board_update(bot, scheduler)
-            # DevOpsBoardUpdate.setup_board_update(bot, scheduler)
+            DevOpsBoardUpdate.setup_board_update(bot, scheduler)
         await (bot.get_channel(WellKnown.get_channel(WellKnown.channel_bot_setup)).send(
             f"{bot.get_user(WellKnown.user_ghetto05).mention} Starting up (version 1)...{' (test instance)' if is_dev else ''}"))
 
