@@ -46,7 +46,7 @@ def changelog_webhook():
         )
     return '', 204
 
-@app.route('/webhooks/devops', methods=['POST'])
+@app.route('/webhooks/discord-bot/devops', methods=['POST'])
 def devops_webhook():
     if not webhook_bot:
         logger.error("Webhook received but bot is not initialized yet")
