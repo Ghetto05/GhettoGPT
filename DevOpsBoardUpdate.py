@@ -74,9 +74,10 @@ async def fetch_project_issues():
     wiql_query = """
     SELECT [System.Id], [System.Title], [System.State] 
     FROM WorkItems 
-    WHERE [System.TeamProject] = @project AND [System.WorkItemType] = 'Bug' 
+    WHERE [System.TeamProject] = @project 
     ORDER BY [System.State] DESC
     """
+    # AND [System.WorkItemType] = 'Bug'
 
     async with ClientSession() as session:
         wiql_url = f"https://dev.azure.com/{DEVOPS_ORG}/{DEVOPS_PROJECT}/_apis/wit/wiql?api-version=7.0"
@@ -84,6 +85,7 @@ async def fetch_project_issues():
         async with session.post(wiql_url, json=wiql_payload, headers=headers) as resp:
             resp_json = await resp.json()
             work_items = resp_json.get("workItems", [])
+            logger.info(f"WIQL returned {len(work_items)} work items")
             if not work_items:
                 return defaultdict(list)
             ids = [str(wi["id"]) for wi in work_items]
@@ -106,6 +108,7 @@ async def fetch_project_issues():
                     number = item.get("id")
                     # Use BoardColumn field if present, else fallback to State
                     column = fields.get("System.BoardColumn") or fields.get("System.State") or "Unknown"
+                    logger.info(f"Work Item #{number}: '{title}' in column '{column}'")
                     issues_by_column[column].append({
                         "title": title,
                         "number": number,
