@@ -4,6 +4,7 @@ from discord.ext import commands
 
 import Database
 import DevOpsBoardUpdate
+import DevOpsTicketSystem
 from SpamBanner import check_and_ban_link_spammer
 from Webhooks import setup_webhooks
 
@@ -65,6 +66,9 @@ async def on_message(message: Message):
     if message.author.bot:
         return
 
+    if DevOpsTicketSystem.handle_message(message):
+        return
+
     if not is_dev:
         await check_and_ban_link_spammer(message, bot)
 
@@ -72,6 +76,12 @@ async def on_message(message: Message):
 
     if bot.user in message.mentions and message.author.id == WellKnown.user_ghetto05 and "send a message here please" in message.content:
         await message.channel.send("This is a message")
+
+
+@bot.event
+async def on_thread_create(thread):
+    if DevOpsTicketSystem.handle_thread_creation(thread):
+        return
 
 
 if __name__ == "__main__":

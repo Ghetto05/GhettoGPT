@@ -35,7 +35,7 @@ async def handle_thread_creation(thread) -> bool:
         return False
 
 
-async def on_message(message: discord.Message) -> bool:
+async def handle_message(message: discord.Message) -> bool:
     if message.author.bot:
         return False
 
