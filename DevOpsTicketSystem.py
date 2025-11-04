@@ -1,5 +1,7 @@
 import asyncio
 import os
+import time
+
 import discord
 import Database
 import WellKnown
@@ -19,6 +21,7 @@ azure_devops_client = AzureDevOpsClient(
 
 async def handle_thread_creation(thread) -> bool:
     if isinstance(thread.parent, discord.ForumChannel) and thread.parent.id == WellKnown.channel_devops_ticket_system:
+        time.sleep(0.2)
         first_message = await thread.fetch_message(thread.id)
         title = thread.name
         description = first_message.content
