@@ -202,7 +202,7 @@ async def enqueue_changelog_change(mod_slug: str, old_content: str, new_content:
         return
 
     global changelog_update_queue
-    changelog_update_queue[mod_slug] = additions
+    changelog_update_queue.setdefault(mod_slug, []).extend(additions)
 
     await append_changelog_to_weekly_queue(mod_slug, additions)
 
