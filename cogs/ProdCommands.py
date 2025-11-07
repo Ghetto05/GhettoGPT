@@ -4,6 +4,7 @@ from discord import ApplicationContext, Bot, Cog, slash_command
 
 import DevOpsBoardUpdate
 import GitHubBoardUpdate
+import GitHubChangelogUpdate
 
 logger = getLogger(__name__)
 is_dev = environ.get("ENV") == "dev"
@@ -24,6 +25,13 @@ class ProdCommands(Cog):
     async def update_devops_board(self, ctx: ApplicationContext):
         await ctx.respond("Updating DevOps issues...")
         await DevOpsBoardUpdate.update_board(self.bot)
+        await ctx.send_followup("Done.")
+
+    @slash_command(name="force-weekly-changelog", description="Send the weekly changelog update",
+                   guild_ids=[954740284758032425])
+    async def force_weekly_changelog(self, ctx: ApplicationContext):
+        await ctx.respond("Sending weekly changelog...")
+        await GitHubChangelogUpdate.weekly_changelog_update(self.bot)
         await ctx.send_followup("Done.")
 
 def setup(bot: Bot):
