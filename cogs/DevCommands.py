@@ -74,7 +74,7 @@ class DevCommands(discord.Cog):
             await ctx.respond("This is a test command and must not be used in production!")
             return
         await ctx.respond("Sending changelog update...")
-        await send_enqueued_changelog_update()
+        await send_enqueued_changelog_update(self.bot)
         await ctx.send_followup("Done.")
 
 

@@ -31,7 +31,7 @@ class ProdCommands(Cog):
                    guild_ids=[954740284758032425])
     async def force_weekly_changelog(self, ctx: ApplicationContext):
         await ctx.respond("Sending weekly changelog...")
-        await GitHubChangelogUpdate.weekly_changelog_update(self.bot)
+        await GitHubChangelogUpdate.weekly_changelog_update()
         await ctx.send_followup("Done.")
 
 def setup(bot: Bot):
