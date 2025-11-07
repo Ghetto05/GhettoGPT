@@ -35,7 +35,7 @@ async def run_periodic_update():
         logger.info("Updating GitHub Board")
         await update_board(update_bot)
     except Exception:
-        logger.error("Error in updating GitHub board: {e}")
+        logger.exception("Error in updating GitHub board: {e}")
 
 
 def get_next_interval():

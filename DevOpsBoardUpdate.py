@@ -33,7 +33,7 @@ async def run_periodic_update():
         logger.info("Updating Azure DevOps Board")
         await update_board(update_bot)
     except Exception as e:
-        logger.error(f"Error in updating Azure DevOps board: {e}", exc_info=True)
+        logger.exception(f"Error in updating Azure DevOps board: {e}", exc_info=True)
 
 def get_next_interval():
     now = utils.utcnow().replace(second=0, microsecond=0)

@@ -184,7 +184,7 @@ async def process_changelog(session, bot: Bot, mod, version, channel_id):
         logger.info(f"Updated embed for {mod_slug} ({len(changelog.strip())} chars)")
 
     except Exception as e:
-        logger.error(f"Error posting embed for {mod_slug}: {e}")
+        logger.exception(f"Error posting embed for {mod_slug}: {e}")
 
 
 async def enqueue_changelog_change(mod_slug: str, old_content: str, new_content: str):
